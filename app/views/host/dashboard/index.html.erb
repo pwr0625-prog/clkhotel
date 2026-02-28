@@ -1,0 +1,28 @@
+<main class="listings-main">
+  <div class="listings-header">
+    <h1>호스트 대시보드</h1>
+    <div style="display:flex; gap:10px;"><%= link_to "숙소 관리", host_properties_path %> <%= link_to "예약 요청", host_bookings_path %></div>
+  </div>
+
+  <section class="post-list-box">
+    <div class="post-list-header"><h2>내 숙소</h2><%= link_to "숙소 등록", new_host_property_path, class: "new-listing-link" %></div>
+    <% @properties.each do |property| %>
+      <article class="post-list-item">
+        <h3><%= link_to property.property_name, host_property_path(property) %></h3>
+        <p><span><%= property.city %></span><span>객실 유형 <%= property.room_types.count %>개</span><span>리뷰 <%= property.review_count %>개</span></p>
+      </article>
+    <% end %>
+    <% if @properties.empty? %><p class="post-empty">등록된 숙소가 없습니다.</p><% end %>
+  </section>
+
+  <section class="post-list-box">
+    <div class="post-list-header"><h2>최근 예약 요청</h2><%= link_to "전체 보기", host_bookings_path %></div>
+    <% @recent_bookings.each do |booking| %>
+      <article class="post-list-item">
+        <h3><%= booking.booking_code %> · <%= booking.status_label %></h3>
+        <p><span><%= booking.property.property_name %></span><span><%= booking.user.name %></span><span><%= booking.check_in_date %> ~ <%= booking.check_out_date %></span></p>
+      </article>
+    <% end %>
+    <% if @recent_bookings.empty? %><p class="post-empty">예약 요청이 없습니다.</p><% end %>
+  </section>
+</main>

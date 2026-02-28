@@ -1,0 +1,26 @@
+<%= form_with model: post do |form| %>
+  <% if post.errors.any? %>
+    <div>
+      <h2><%= pluralize(post.errors.count, "error") %>로 저장에 실패했습니다.</h2>
+      <ul>
+        <% post.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :title, "제목" %><br>
+    <%= form.text_field :title %>
+  </div>
+
+  <div>
+    <%= form.label :content, "내용" %><br>
+    <%= form.text_area :content, rows: 8 %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

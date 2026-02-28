@@ -1,0 +1,28 @@
+<h1>블로그 게시글 목록</h1>
+
+<p><%= link_to "새 글 작성", new_post_path %></p>
+
+<ul>
+  <% @posts.each do |post| %>
+    <li>
+      <h2><%= link_to post.title, post %></h2>
+      <p><%= truncate(post.content, length: 120) %></p>
+      <p>
+        <%= link_to "수정", edit_post_path(post) %>
+        <%= button_to "삭제", post, method: :delete, data: { turbo_confirm: "정말 삭제할까요?" } %>
+      </p>
+    </li>
+  <% end %>
+</ul>
+
+<nav>
+  <% if @current_page > 1 %>
+    <%= link_to "이전", posts_path(page: @current_page - 1) %>
+  <% end %>
+
+  <span><%= @current_page %> / <%= @total_pages %></span>
+
+  <% if @current_page < @total_pages %>
+    <%= link_to "다음", posts_path(page: @current_page + 1) %>
+  <% end %>
+</nav>

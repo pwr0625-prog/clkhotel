@@ -1,0 +1,66 @@
+<main class="home-main">
+  <section class="hotel-search-box">
+    <!-- <h1 class="home-title">호텔 예약 시스템</h1> -->
+    <p class="home-subtitle">ClkHotel의 모든 호텔은 3박이상 예약시 레이트체크아웃, 공항 픽드랍 서비스가 기본 제공됩니다. </p>
+
+    <%= form_with url: properties_path, method: :get, local: true, class: "hotel-search-form" do |f| %>
+      <div class="field-group">
+        <%= f.label :q, "검색어" %>
+        <%= f.text_field :q, class: "field-input", placeholder: "호텔명/도시/주소" %>
+      </div>
+      <div class="field-group">
+        <%= f.label :check_in_date, "체크인" %>
+        <%= f.date_field :check_in_date, class: "field-input", value: Date.current + 7 %>
+      </div>
+      <div class="field-group">
+        <%= f.label :check_out_date, "체크아웃" %>
+        <%= f.date_field :check_out_date, class: "field-input", value: Date.current + 8 %>
+      </div>
+      <div class="field-group">
+        <%= f.label :guests, "인원" %>
+        <%= f.number_field :guests, min: 1, value: 2, class: "field-input" %>
+      </div>
+      <%= f.submit "검색", class: "search-button" %>
+    <% end %>
+  </section>
+
+  <section class="post-list-box">
+    <div class="post-list-header">
+      <h2>추천 숙소</h2>
+      <%= link_to "전체 검색", properties_path %>
+    </div>
+
+    <% if @featured_properties.any? %>
+      <div class="listing-cards">
+        <% @featured_properties.each do |property| %>
+          <article class="listing-card <%= 'listing-card--disabled' if property.closed_for_guest? %>">
+            <div class="listing-card__media">
+              <% if property.property_image&.display_source.present? %>
+                <%= image_tag property.property_image.display_source, alt: "#{property.property_name} 대표 이미지", class: "listing-thumb" %>
+              <% else %>
+                <div class="listing-thumb placeholder"><%= property.property_type.humanize %></div>
+              <% end %>
+              <% if property.closed_for_guest? %>
+                <div class="listing-card__overlay">준비중</div>
+              <% end %>
+            </div>
+            <div class="listing-card__content">
+              <h2>
+                <% if property.closed_for_guest? %>
+                  <span class="listing-card__title-disabled"><%= property.property_name %></span>
+                <% else %>
+                  <%= link_to property.property_name, property_path(property) %>
+                <% end %>
+              </h2>
+              <p><strong><%= property.city %></strong> · <%= property.address %></p>
+              <p>최저가: <strong><%= number_to_currency(property.min_price || 0, unit: "₩", precision: 0) %></strong></p>
+              <p>평점: <%= property.avg_rating %> / 리뷰 <%= property.review_count %></p>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="post-empty">등록된 숙소가 없습니다. 호스트 계정으로 숙소를 등록해 주세요.</p>
+    <% end %>
+  </section>
+</main>

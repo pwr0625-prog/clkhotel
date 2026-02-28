@@ -1,0 +1,23 @@
+<h1>예약 요청 목록</h1>
+
+<% if @bookings.any? %>
+  <ul>
+    <% @bookings.each do |booking| %>
+      <li>
+        <h2><%= link_to booking.listing.title, booking.listing %></h2>
+        <p>게스트: <%= booking.guest.name %> (<%= booking.guest.email %>)</p>
+        <p>날짜: <%= booking.check_in %> ~ <%= booking.check_out %></p>
+        <p>인원: <%= booking.guests_count %>명</p>
+        <p>총 금액: <%= number_to_currency(booking.total_price) %></p>
+        <p>상태: <strong><%= booking.status_label %></strong></p>
+
+        <% if booking.pending? %>
+          <%= button_to "예약 확정", confirm_booking_path(booking), method: :patch %>
+          <%= button_to "예약 취소", reject_booking_path(booking), method: :patch %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p>예약 요청이 없습니다.</p>
+<% end %>

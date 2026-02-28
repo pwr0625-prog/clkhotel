@@ -1,0 +1,61 @@
+<%= form_with model: listing do |form| %>
+  <% if listing.errors.any? %>
+    <div>
+      <h2><%= pluralize(listing.errors.count, "error") %>로 저장에 실패했습니다.</h2>
+      <ul>
+        <% listing.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :title, "제목" %><br>
+    <%= form.text_field :title, required: true %>
+  </div>
+
+  <div>
+    <%= form.label :description, "설명" %><br>
+    <%= form.text_area :description, rows: 6, required: true %>
+  </div>
+
+  <div>
+    <%= form.label :location, "위치" %><br>
+    <%= form.text_field :location, required: true %>
+  </div>
+
+  <div>
+    <%= form.label :price, "1박 가격" %><br>
+    <%= form.number_field :price, min: 1, step: 0.01, required: true %>
+  </div>
+
+  <div>
+    <%= form.label :capacity, "최대 수용 인원" %><br>
+    <%= form.number_field :capacity, min: 1, step: 1, required: true %>
+  </div>
+
+  <div>
+    <%= form.label :room_types, "객실타입" %><br>
+    <%= form.text_area :room_types, rows: 10, placeholder: "객실타입 정보를 줄바꿈으로 입력하세요." %>
+  </div>
+
+  <div>
+    <%= form.label :rate_details, "요금" %><br>
+    <%= form.text_area :rate_details, rows: 10, placeholder: "요금 정보를 줄바꿈으로 입력하세요." %>
+  </div>
+
+  <div>
+    <%= form.label :other_details, "기타" %><br>
+    <%= form.text_area :other_details, rows: 10, placeholder: "기타 안내사항을 줄바꿈으로 입력하세요." %>
+  </div>
+
+  <div>
+    <%= form.label :photos, "사진 업로드 (최소 1장)" %><br>
+    <%= form.file_field :photos, multiple: true, accept: "image/*", required: listing.new_record? %>
+  </div>
+
+  <div>
+    <%= form.submit listing.persisted? ? "hostel 수정" : "hostel 등록" %>
+  </div>
+<% end %>

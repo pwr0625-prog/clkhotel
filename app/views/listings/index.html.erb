@@ -1,0 +1,30 @@
+<main class="listings-main">
+  <section class="listings-header">
+    <h1>hostel 목록</h1>
+    <% if logged_in? && current_user.host? %>
+      <p><%= link_to "새 hostel 등록", new_listing_path, class: "new-listing-link" %></p>
+    <% end %>
+  </section>
+
+  <section class="listing-cards">
+    <% @listings.each do |listing| %>
+      <article class="listing-card">
+        <div class="listing-card__media">
+          <% if listing.photos.attached? %>
+            <%= image_tag listing.photos.first, alt: listing.title, class: "listing-thumb" %>
+          <% else %>
+            <div class="listing-thumb placeholder">NO IMAGE</div>
+          <% end %>
+        </div>
+
+        <div class="listing-card__content">
+          <h2><%= link_to listing.title, listing %></h2>
+          <p><strong>위치:</strong> <%= listing.location %></p>
+          <p><strong>가격:</strong> 1박 <%= number_to_currency(listing.price) %></p>
+          <p><strong>수용 인원:</strong> 최대 <%= listing.capacity %>명</p>
+          <p><strong>호스트:</strong> <%= listing.host.name %></p>
+        </div>
+      </article>
+    <% end %>
+  </section>
+</main>

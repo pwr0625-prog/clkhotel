@@ -1,0 +1,57 @@
+<main class="listings-main">
+  <div class="listings-header">
+    <h1>예약 상세</h1>
+    <%= link_to "내 예약 목록", my_bookings_path %>
+  </div>
+
+  <section class="post-list-box">
+    <div class="post-list-header"><h2><%= @booking.booking_code %></h2><span><%= @booking.status_label %></span></div>
+    <p><strong>숙소</strong>: <%= link_to @booking.property.property_name, property_path(@booking.property) %></p>
+    <p><strong>객실</strong>: <%= @booking.room_type.room_name %></p>
+    <p><strong>일정</strong>: <%= @booking.check_in_date %> ~ <%= @booking.check_out_date %> (<%= @booking.nights %>박)</p>
+    <p><strong>인원/객실</strong>: <%= @booking.guest_count %>명 / <%= @booking.room_count %>실</p>
+    <% if @booking.assigned_room_numbers.any? %>
+      <p><strong>배정 호수</strong>: <%= @booking.assigned_room_numbers.join(", ") %></p>
+    <% end %>
+    <p><strong>요청사항</strong>: <%= @booking.guest_requests.presence || '-' %></p>
+    <p><strong>금액</strong>: 원가 <%= number_to_currency(@booking.original_price, unit: '₩', precision: 0) %> / 할인 <%= number_to_currency(@booking.discount_amount, unit: '₩', precision: 0) %> / 결제금액 <strong><%= number_to_currency(@booking.total_price, unit: '₩', precision: 0) %></strong></p>
+    <p><strong>결제</strong>: <%= @booking.payment&.payment_status || '미결제' %> (<%= @booking.payment&.payment_method || '-' %>)</p>
+    <% if @booking.pending? %>
+      <p class="home-subtitle" style="margin-top:8px;">호스트 예약확정 전입니다. 현재 상태는 예약확정 대기이며, 확정 후 결제/취소를 진행할 수 있습니다.</p>
+    <% elsif @booking.awaiting_payment? %>
+      <p class="home-subtitle" style="margin-top:8px;">호스트가 예약을 확정했습니다. 이제 결제 또는 예약 취소를 진행할 수 있습니다.</p>
+    <% end %>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+      <% if @booking.awaiting_payment? %>
+        <%= link_to "결제 진행", new_payment_path(@booking), class: "new-listing-link" %>
+      <% end %>
+      <% if @booking.user_id == current_user&.id && (@booking.awaiting_payment? || @booking.confirmed?) %>
+        <%= button_to "예약 취소", cancel_booking_path(@booking), method: :patch, class: "nav-logout" %>
+      <% end %>
+      <% if @booking.user_id == current_user&.id && @booking.confirmed? %>
+        <%= button_to "숙박 완료 처리 (테스트)", complete_booking_path(@booking), method: :patch, class: "new-listing-link" %>
+      <% end %>
+    </div>
+  </section>
+
+  <% if @booking.user_id == current_user&.id && @booking.can_review? %>
+    <section class="post-list-box">
+      <div class="post-list-header"><h2>리뷰 작성</h2><span>체크아웃 후 리뷰/재방문 단계</span></div>
+      <%= form_with model: (@booking.review || Review.new), url: review_path(@booking), method: :post, local: true do |f| %>
+        <div class="hotel-search-form" style="grid-template-columns: repeat(5, minmax(90px, 1fr));">
+          <div class="field-group"><%= f.label :rating_overall, "전체" %><%= f.number_field :rating_overall, step: 0.5, min: 1, max: 5, value: @booking.review&.rating_overall || 5, class: "field-input" %></div>
+          <div class="field-group"><%= f.label :rating_cleanliness, "청결" %><%= f.number_field :rating_cleanliness, step: 0.5, min: 1, max: 5, value: @booking.review&.rating_cleanliness || 5, class: "field-input" %></div>
+          <div class="field-group"><%= f.label :rating_location, "위치" %><%= f.number_field :rating_location, step: 0.5, min: 1, max: 5, value: @booking.review&.rating_location || 5, class: "field-input" %></div>
+          <div class="field-group"><%= f.label :rating_service, "서비스" %><%= f.number_field :rating_service, step: 0.5, min: 1, max: 5, value: @booking.review&.rating_service || 5, class: "field-input" %></div>
+          <div class="field-group"><%= f.label :rating_value, "가성비" %><%= f.number_field :rating_value, step: 0.5, min: 1, max: 5, value: @booking.review&.rating_value || 5, class: "field-input" %></div>
+        </div>
+        <div class="field-group" style="margin-top:12px;">
+          <%= f.label :content, "리뷰 내용" %>
+          <%= f.text_area :content, rows: 4, class: "field-input", style: "height:auto; padding:10px;" %>
+        </div>
+        <%= f.submit (@booking.review ? "리뷰 수정" : "리뷰 저장"), class: "search-button", style: "margin-top:12px;" %>
+      <% end %>
+    </section>
+  <% end %>
+</main>

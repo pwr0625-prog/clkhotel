@@ -1,0 +1,20 @@
+<main class="listings-main">
+  <div class="listings-header"><h1>내 예약 목록</h1></div>
+
+  <section class="post-list-box">
+    <% @bookings.each do |booking| %>
+      <article class="post-list-item">
+        <h3><%= link_to booking.booking_code, booking_path(booking) %> · <%= booking.status_label %></h3>
+        <p>
+          <span><strong><%= booking.property.property_name %></strong></span>
+          <span><%= booking.check_in_date %> ~ <%= booking.check_out_date %> (<%= booking.nights %>박)</span>
+          <span>인원 <%= booking.guest_count %>명 / 객실 <%= booking.room_count %>실</span>
+          <span>결제 <%= booking.payment&.payment_status || '미결제' %></span>
+          <span>총액 <%= number_to_currency(booking.total_price, unit: '₩', precision: 0) %></span>
+        </p>
+      </article>
+    <% end %>
+
+    <% if @bookings.empty? %><p class="post-empty">예약 내역이 없습니다.</p><% end %>
+  </section>
+</main>

@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>호텔 예약 시스템 프로세스 흐름도</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060810;
+  --surface: #0d1117;
+  --surface2: #161b27;
+  --border: #1e2d45;
+  --accent: #3b82f6;
+  --cyan: #06b6d4;
+  --purple: #8b5cf6;
+  --green: #10b981;
+  --gold: #f59e0b;
+  --red: #ef4444;
+  --pink: #ec4899;
+  --text: #e2e8f0;
+  --muted: #475569;
+  --muted2: #64748b;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, #060810 0%, #0a1628 60%, #060d1f 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 36px 48px 32px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: -100px; right: -100px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 65%);
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; left: 30%;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 65%);
+}
+.header-inner { position: relative; z-index: 1; }
+.header h1 {
+  font-size: 2rem; font-weight: 900;
+  background: linear-gradient(90deg, #60a5fa 0%, #06b6d4 40%, #8b5cf6 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  letter-spacing: -0.02em;
+}
+.header p { color: var(--muted2); font-size: 0.88rem; margin-top: 6px; }
+.legend {
+  display: flex; gap: 20px; flex-wrap: wrap;
+  margin-top: 20px;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 0.75rem; color: var(--muted2);
+}
+.legend-dot {
+  width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+}
+
+/* NAV TABS */
+.nav {
+  display: flex; gap: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 48px;
+  position: sticky; top: 0; z-index: 200;
+  overflow-x: auto;
+}
+.nav-tab {
+  padding: 14px 20px;
+  font-size: 0.82rem; font-weight: 500;
+  color: var(--muted2);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.nav-tab:hover { color: var(--text); }
+.nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* CONTENT */
+.view { display: none; padding: 40px 48px; }
+.view.active { display: block; }
+
+/* FLOW DIAGRAM */
+.flow-section { margin-bottom: 56px; }
+.flow-section-title {
+  font-size: 0.7rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.15em;
+  color: var(--muted); margin-bottom: 20px;
+  display: flex; align-items: center; gap: 10px;
+}
+.flow-section-title::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* SWIMLANE */
+.swimlane {
+  display: grid;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.swimlane-header {
+  display: grid;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.lane-label {
+  padding: 10px 16px;
+  font-size: 0.72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  text-align: center;
+  border-right: 1px solid var(--border);
+}
+.lane-label:last-child { border-right: none; }
+.swimlane-body {
+  display: grid;
+}
+.lane-col {
+  border-right: 1px solid rgba(255,255,255,0.04);
+  padding: 16px 12px;
+  display: flex; flex-direction: column; gap: 10px;
+  position: relative;
+}
+.lane-col:last-child { border-right: none; }
+
+/* FLOW NODES */
+.node {
+  border-radius: 8px;
+  padding: 10px 13px;
+  font-size: 0.78rem;
+  position: relative;
+  transition: all 0.2s;
+  cursor: default;
+}
+.node:hover { transform: translateY(-1px); }
+.node-title { font-weight: 600; margin-bottom: 3px; }
+.node-desc { font-size: 0.7rem; color: rgba(255,255,255,0.5); line-height: 1.4; }
+
+/* node types */
+.node-screen {
+  background: rgba(59,130,246,0.12);
+  border: 1px solid rgba(59,130,246,0.3);
+}
+.node-screen .node-title { color: #93c5fd; }
+.node-api {
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.25);
+}
+.node-api .node-title { color: #6ee7b7; }
+.node-db {
+  background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.25);
+}
+.node-db .node-title { color: #fcd34d; }
+.node-external {
+  background: rgba(139,92,246,0.1);
+  border: 1px solid rgba(139,92,246,0.25);
+}
+.node-external .node-title { color: #c4b5fd; }
+.node-decision {
+  background: rgba(236,72,153,0.1);
+  border: 1px solid rgba(236,72,153,0.3);
+  border-left: 3px solid #ec4899;
+}
+.node-decision .node-title { color: #f9a8d4; }
+.node-event {
+  background: rgba(6,182,212,0.1);
+  border: 1px solid rgba(6,182,212,0.25);
+}
+.node-event .node-title { color: #67e8f9; }
+.node-start {
+  background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(139,92,246,0.2));
+  border: 1px solid rgba(59,130,246,0.4);
+  text-align: center;
+}
+.node-start .node-title { color: #bfdbfe; }
+.node-end {
+  background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(6,182,212,0.15));
+  border: 1px solid rgba(16,185,129,0.35);
+  text-align: center;
+}
+.node-end .node-title { color: #6ee7b7; }
+.node-error {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.25);
+}
+.node-error .node-title { color: #fca5a5; }
+
+/* ARROW */
+.arrow {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 1rem; margin: 2px 0;
+  gap: 4px; flex-direction: column;
+}
+.arrow-label { font-size: 0.65rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.arrow-down::after { content: '↓'; }
+.arrow-right::after { content: '→'; }
+
+/* STEP BADGE */
+.step-badge {
+  display: inline-flex;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.6);
+  font-size: 0.6rem; font-weight: 700;
+  align-items: center; justify-content: center;
+  margin-right: 5px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+/* SCREEN SPEC CARDS */
+.screen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+.screen-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.screen-card:hover {
+  border-color: rgba(59,130,246,0.4);
+  box-shadow: 0 0 24px rgba(59,130,246,0.08);
+}
+.screen-card-header {
+  padding: 14px 18px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.screen-card-header .screen-icon { font-size: 1.1rem; }
+.screen-card-header .screen-name { font-size: 0.88rem; font-weight: 700; }
+.screen-card-header .screen-route {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--muted2);
+  background: var(--bg);
+  padding: 2px 7px; border-radius: 4px;
+}
+.screen-card-body { padding: 14px 18px; }
+.spec-section { margin-bottom: 12px; }
+.spec-section:last-child { margin-bottom: 0; }
+.spec-label {
+  font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; margin-bottom: 6px;
+}
+.spec-items { display: flex; flex-direction: column; gap: 4px; }
+.spec-item {
+  font-size: 0.75rem; color: var(--muted2);
+  padding: 4px 8px;
+  background: var(--bg);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 5px;
+  display: flex; align-items: flex-start; gap: 6px;
+}
+.spec-item::before { content: '›'; flex-shrink: 0; margin-top: 0px; }
+.api-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem; margin: 2px;
+}
+.chip-get { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.2); }
+.chip-post { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.2); }
+.chip-put { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.2); }
+.chip-del { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.2); }
+.db-chip {
+  display: inline-flex; align-items: center;
+  padding: 2px 7px; border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.67rem; margin: 2px;
+  background: rgba(245,158,11,0.1); color: #fcd34d;
+  border: 1px solid rgba(245,158,11,0.2);
+}
+
+/* PROCESS OVERVIEW (main flow) */
+.main-flow {
+  display: flex; align-items: flex-start;
+  gap: 0; overflow-x: auto;
+  padding-bottom: 20px;
+}
+.flow-stage {
+  min-width: 180px;
+  display: flex; flex-direction: column; align-items: center;
+  position: relative;
+}
+.flow-stage-box {
+  width: 160px;
+  border-radius: 10px;
+  padding: 16px 14px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+.flow-stage-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700;
+  margin: 0 auto 10px;
+}
+.flow-stage-name { font-size: 0.82rem; font-weight: 700; margin-bottom: 4px; }
+.flow-stage-sub { font-size: 0.68rem; color: rgba(255,255,255,0.45); }
+.flow-stage-screens {
+  margin-top: 10px; display: flex; flex-direction: column; gap: 4px;
+}
+.flow-screen-tag {
+  font-size: 0.65rem; padding: 2px 7px; border-radius: 3px;
+  background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.5);
+  text-align: left;
+}
+.flow-connector {
+  display: flex; align-items: center;
+  padding: 0 8px; padding-top: 40px;
+  flex-shrink: 0;
+}
+.flow-connector-line {
+  width: 30px; height: 2px;
+  position: relative;
+}
+.flow-connector-line::after {
+  content: ''; position: absolute;
+  right: 0; top: -4px;
+  border: 4px solid transparent;
+}
+
+/* colors per stage */
+.stage-1 .flow-stage-box { background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); }
+.stage-1 .flow-stage-num { background: rgba(59,130,246,0.25); color: #93c5fd; }
+.stage-1 .flow-stage-name { color: #93c5fd; }
+.stage-1 .flow-connector-line { background: rgba(59,130,246,0.4); }
+.stage-1 .flow-connector-line::after { border-left-color: rgba(59,130,246,0.6); }
+
+.stage-2 .flow-stage-box { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); }
+.stage-2 .flow-stage-num { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+.stage-2 .flow-stage-name { color: #6ee7b7; }
+.stage-2 .flow-connector-line { background: rgba(16,185,129,0.4); }
+.stage-2 .flow-connector-line::after { border-left-color: rgba(16,185,129,0.6); }
+
+.stage-3 .flow-stage-box { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); }
+.stage-3 .flow-stage-num { background: rgba(245,158,11,0.2); color: #fcd34d; }
+.stage-3 .flow-stage-name { color: #fcd34d; }
+.stage-3 .flow-connector-line { background: rgba(245,158,11,0.4); }
+.stage-3 .flow-connector-line::after { border-left-color: rgba(245,158,11,0.6); }
+
+.stage-4 .flow-stage-box { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); }
+.stage-4 .flow-stage-num { background: rgba(139,92,246,0.2); color: #c4b5fd; }
+.stage-4 .flow-stage-name { color: #c4b5fd; }
+.stage-4 .flow-connector-line { background: rgba(139,92,246,0.4); }
+.stage-4 .flow-connector-line::after { border-left-color: rgba(139,92,246,0.6); }
+
+.stage-5 .flow-stage-box { background: rgba(236,72,153,0.1); border: 1px solid rgba(236,72,153,0.3); }
+.stage-5 .flow-stage-num { background: rgba(236,72,153,0.2); color: #f9a8d4; }
+.stage-5 .flow-stage-name { color: #f9a8d4; }
+.stage-5 .flow-connector-line { background: rgba(236,72,153,0.4); }
+.stage-5 .flow-connector-line::after { border-left-color: rgba(236,72,153,0.6); }
+
+.stage-6 .flow-stage-box { background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.3); }
+.stage-6 .flow-stage-num { background: rgba(6,182,212,0.2); color: #67e8f9; }
+.stage-6 .flow-stage-name { color: #67e8f9; }
+
+/* DETAIL FLOW TABLE */
+.detail-flow {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+.detail-flow th {
+  background: var(--surface2);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted2);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.detail-flow td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: top;
+}
+.detail-flow tr:last-child td { border-bottom: none; }
+.detail-flow tr:hover td { background: rgba(255,255,255,0.02); }
+.step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  font-size: 0.68rem; font-weight: 700; flex-shrink: 0;
+}
+.status-chip {
+  display: inline-block;
+  padding: 2px 8px; border-radius: 3px;
+  font-size: 0.67rem; font-weight: 600;
+}
+.status-user { background: rgba(59,130,246,0.15); color: #93c5fd; }
+.status-sys { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+.status-pg { background: rgba(139,92,246,0.15); color: #c4b5fd; }
+.status-notify { background: rgba(6,182,212,0.15); color: #67e8f9; }
+.status-decision { background: rgba(245,158,11,0.15); color: #fcd34d; }
+.status-error { background: rgba(239,68,68,0.15); color: #fca5a5; }
+
+/* MODAL overlay for screen specs */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 1000;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  width: 90%; max-width: 700px;
+  max-height: 80vh; overflow-y: auto;
+  padding: 28px;
+}
+.modal-close {
+  float: right;
+  cursor: pointer;
+  color: var(--muted2);
+  font-size: 1.2rem;
+  line-height: 1;
+  background: none; border: none;
+}
+
+/* SIMPLE BLOCK FLOW */
+.block-flow {
+  display: flex; flex-direction: column; gap: 0;
+  max-width: 900px; margin: 0 auto;
+}
+.block-row {
+  display: flex; align-items: stretch; gap: 0;
+}
+.block-cell {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 6px 10px;
+  position: relative;
+}
+.block-node {
+  width: 100%;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  text-align: center;
+  border: 1px solid;
+}
+.block-arrow-down {
+  width: 2px; height: 20px;
+  margin: 0 auto;
+  position: relative;
+}
+.block-arrow-down::after {
+  content: '▼';
+  position: absolute;
+  bottom: -6px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+}
+.block-arrow-right {
+  display: flex; align-items: center;
+  padding: 0 8px;
+  color: var(--muted);
+}
+.block-group-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 0.65rem; font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  padding: 10px 6px;
+  border-right: 2px solid;
+  margin-right: 10px;
+  align-self: stretch;
+  display: flex; align-items: center;
+}
+.parallel-row {
+  display: grid;
+  grid-template-columns: 1fr 20px 1fr;
+  align-items: center;
+  gap: 0;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <h1>🏨 호텔 예약 시스템 — 프로세스 흐름도</h1>
+    <p>전체 사용자 여정 · 시스템 처리 흐름 · 화면별 기능 명세 · DB 연동 상세</p>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> 화면 (Screen)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div> API 처리</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> DB 조작</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div> 외부 시스템</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ec4899"></div> 분기/판단</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#06b6d4"></div> 이벤트/알림</div>
+    </div>
+  </div>
+</div>
+
+<div class="nav">
+  <div class="nav-tab active" onclick="showView('overview')">🗺 전체 흐름</div>
+  <div class="nav-tab" onclick="showView('auth')">🔐 회원/인증</div>
+  <div class="nav-tab" onclick="showView('search')">🔍 검색/탐색</div>
+  <div class="nav-tab" onclick="showView('booking')">📅 예약 프로세스</div>
+  <div class="nav-tab" onclick="showView('payment')">💳 결제/취소</div>
+  <div class="nav-tab" onclick="showView('host')">🏠 호스트 관리</div>
+  <div class="nav-tab" onclick="showView('screens')">📱 화면 명세</div>
+</div>
+
+<!-- ====== OVERVIEW ====== -->
+<div id="view-overview" class="view active">
+  <div class="flow-section">
+    <div class="flow-section-title">사용자 전체 여정 (Customer Journey)</div>
+    <div class="main-flow">
+
+      <div class="flow-stage stage-1">
+        <div class="flow-stage-box">
+          <div class="flow-stage-num">1</div>
+          <div class="flow-stage-name">진입 / 인증</div>
+          <div class="flow-stage-sub">회원가입 · 로그인</div>
+          <div class="flow-stage-screens">
+            <div class="flow-screen-tag">🏠 랜딩 페이지</div>
+            <div class="flow-screen-tag">🔐 로그인/회원가입</div>
+            <div class="flow-screen-tag">📧 이메일 인증</div>
+          </div>
+        </div>
+      </div>
+      <div class="flow-stage stage-1"><div class="flow-connector"><div class="flow-connector-line"></div></div></div>
+
+      <div class="flow-stage stage-2">
+        <div class="flow-stage-box">
+          <div class="flow-stage-num">2</div>
+          <div class="flow-stage-name">검색 / 탐색</div>
+          <div class="flow-stage-sub">숙소 검색 · 필터</div>
+          <div class="flow-stage-screens">
+            <div class="flow-screen-tag">🔍 검색 결과</div>
+            <div class="flow-screen-tag">🗺 지도 검색</div>
+            <div class="flow-screen-tag">❤️ 찜 목록</div>
+          </div>
+        </div>
+      </div>
+      <div class="flow-stage stage-2"><div class="flow-connector"><div class="flow-connector-line"></div></div></div>
+
+      <div class="flow-stage stage-3">
+        <div class="flow-stage-box">
+          <div class="flow-stage-num">3</div>
+          <div class="flow-stage-name">숙소 상세</div>
+          <div class="flow-stage-sub">객실 선택 · 정보확인</div>
+          <div class="flow-stage-screens">
+            <div class="flow-screen-tag">🏨 숙소 상세</div>
+            <div class="flow-screen-tag">🛏 객실 선택</div>
+            <div class="flow-screen-tag">⭐ 리뷰 목록</div>
+          </div>
+        </div>
+      </div>
+      <div class="flow-stage stage-3"><div class="flow-connector"><div class="flow-connector-line"></div></div></div>
+
+      <div class="flow-stage stage-4">
+        <div class="flow-stage-box">
+          <div class="flow-stage-num">4</div>
+          <div class="flow-stage-name">예약 / 결제</div>
+          <div class="flow-stage-sub">정보입력 · 결제</div>
+          <div class="flow-stage-screens">
+            <div class="flow-screen-tag">📋 예약 입력</div>
+            <div class="flow-screen-tag">💳 결제</div>
+            <div class="flow-screen-tag">✅ 예약 완료</div>
+          </div>
+        </div>
+      </div>
+      <div class="flow-stage stage-4"><div class="flow-connector"><div class="flow-connector-line"></div></div></div>
+
+      <div class="flow-stage stage-5">
+        <div class="flow-stage-box">
+          <div class="flow-stage-num">5</div>
+          <div class="flow-stage-name">체류 / 완료</div>
+          <div class="flow-stage-sub">체크인 · 체크아웃</div>
+          <div class="flow-stage-screens">
+            <div class="flow-screen-tag">📱 예약 상세</div>
+            <div class="flow-screen-tag">🔔 알림 수신</div>
+          </div>
+        </div>
+      </div>
+      <div class="flow-stage stage-5"><div class="flow-connector"><div class="flow-connector-line"></div></div></div>
+
+      <div class="flow-stage stage-6">
+        <div class="flow-stage-box">
+          <div class="flow-stage-num">6</div>
+          <div class="flow-stage-name">리뷰 / 재방문</div>
+          <div class="flow-stage-sub">리뷰 작성 · 쿠폰</div>
+          <div class="flow-stage-screens">
+            <div class="flow-screen-tag">✍️ 리뷰 작성</div>
+            <div class="flow-screen-tag">🎟 쿠폰 발급</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="flow-section">
+    <div class="flow-section-title">시스템 레이어별 처리 흐름</div>
+    <div style="overflow-x:auto">
+      <table class="detail-flow" style="min-width:900px">
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th style="width:100px">단계</th>
+            <th style="width:80px">행위자</th>
+            <th>사용자 액션 / 화면</th>
+            <th>서버 처리 (API)</th>
+            <th>DB 조작</th>
+            <th>외부 연동</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="step-num" style="background:rgba(59,130,246,0.2);color:#93c5fd">1</div></td>
+            <td><span class="status-chip status-user">진입</span></td>
+            <td><span class="status-chip status-user">사용자</span></td>
+            <td>랜딩 페이지 접근, 검색바 노출</td>
+            <td>추천 숙소 목록 조회</td>
+            <td>properties 조회 (캐시 우선)</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td><div class="step-num" style="background:rgba(59,130,246,0.2);color:#93c5fd">2</div></td>
+            <td><span class="status-chip status-user">인증</span></td>
+            <td><span class="status-chip status-user">사용자</span></td>
+            <td>소셜 로그인 버튼 클릭</td>
+            <td>OAuth 인증 → JWT 발급</td>
+            <td>users UPSERT</td>
+            <td>카카오/구글 OAuth</td>
+          </tr>
+          <tr>
+            <td><div class="step-num" style="background:rgba(16,185,129,0.2);color:#6ee7b7">3</div></td>
+            <td><span class="status-chip status-sys">검색</span></td>
+            <td><span class="status-chip status-user">사용자</span></td>
+            <td>도시·날짜·인원 입력 후 검색</td>
+            <td>검색 조건 파싱 및 쿼리 실행</td>
+            <td>properties + room_availability JOIN</td>
+            <td>지도 API (좌표 변환)</td>
+          </tr>
+          <tr>
+            <td><div class="step-num" style="background:rgba(16,185,129,0.2);color:#6ee7b7">4</div></td>
+            <td><span class="status-chip status-sys">필터</span></td>
+            <td><span class="status-chip status-user">사용자</span></td>
+            <td>가격·별점·편의시설 필터 적용</td>
+            <td>동적 WHERE 조건 추가</td>
+            <td>property_amenities JOIN</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td><div class="step-num" style="background:rgba(245,158,11,0.2);color:#fcd34d">5</div></td>
+            <td><span class="status-chip status-sys">상세</span></td>
+            <td><span class="status-chip status-user">사용자</span></td>
+            <td>숙소 카드 클릭 → 상세 페이지</td>
+            <td>숙소 정보 + 가용 객실 조회</td>
+            <td>properties, room_types, reviews 조회</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td><div class="step-num" style="background:rgba(245,158,11,0.2);color:#fcd34d">6</div></td>
+            <td><span class="status-chip status-sys">선택</span></td>
+            <td><span class="status-chip status-user">사용자</span></td>
+            <td>날짜·객실 타입 선택</td>
+            <td>가용 재고 실시간 확인</td>
+            <td>room_availability 조회 (날짜 범위)</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td><div class="step-num" style="background:rgba(139,92,246,0.2);color:#c4b5fd">7</div></td>
+            <td><span class="status-chip status-decision">판단</span></td>
+            <td><span class="status-chip status-sys">시스템</span></td>
+            <td>-</td>
+            <td>재고 있음? 로그인 상태?</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td><div class="step-num" style="background:rgba(139,92,246,0.2);color:#c4b5fd">8</div></td>
+            <td><span class="status-chip status-user">예약입력</span></td>
+            <td><span class="status-chip status-user">사용자</span></td>
+            <td>투숙자 정보·요청사항 입력, 쿠폰 입력</td>
+            <td>쿠폰 유효성 검증, 최종 금액 계산</td>
+            <td>coupons 조회 및 검증</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td><div class="step-num" style="background:rgba(139,92,246,0.2);color:#c4b5fd">9</div></td>
+            <td><span class="status-chip status-sys">재고잠금</span></td>
+            <td><span class="status-chip status-sys">시스템</span></td>
+            <td>결제 페이지 진입</td>
+            <td>Redis 임시 재고 홀드 (10분)</td>
+            <td>-</td>
+            <td>Redis SETNX</td>
+          </tr>
+          <tr>
+            <td><div class="step-num" style="background:rgba(139,92,246,0.2);color:#c4b5fd">10</div></td>
+            <td><span class="status-chip status-pg">결제</span></td>
+            <td><span class="status-chip status-user">사용자</span></td>
+            <td>결제 수단 선택 및 결제 진행</td>
+            <td>PG 결제 요청 생성</td>
+            <td>payments 레코드 생성 (pending)</td>
+            <td>토스페이먼츠 / PG사</td>
+          </tr>
+          <tr>
+            <td><div class="step-num" style="background:rgba(139,92,246,0.2);color:#c4b5fd">11</div></td>
+            <td><span class="status-chip status-pg">결제확인</span></td>
+            <td><span class="status-chip status-sys">시스템</span></td>
+            <td>-</td>
+            <td>웹훅 수신 → 결제 검증</td>
+            <td>payments UPDATE (success), bookings INSERT, room_availability UPDATE</td>
+            <td>PG 웹훅</td>
+          </tr>
+          <tr>
+            <td><div class="step-num" style="background:rgba(6,182,212,0.2);color:#67e8f9">12</div></td>
+            <td><span class="status-chip status-notify">알림</span></td>
+            <td><span class="status-chip status-sys">시스템</span></td>
+            <td>예약 완료 화면</td>
+            <td>확인 이메일·SMS 발송</td>
+            <td>notifications INSERT</td>
+            <td>SES(이메일) / SMS API</td>
+          </tr>
+          <tr>
+            <td><div class="step-num" style="background:rgba(6,182,212,0.2);color:#67e8f9">13</div></td>
+            <td><span class="status-chip status-notify">체크인 알림</span></td>
+            <td><span class="status-chip status-sys">스케줄러</span></td>
+            <td>-</td>
+            <td>D-1 푸시 알림 발송</td>
+            <td>bookings 조회 (내일 체크인)</td>
+            <td>FCM Push</td>
+          </tr>
+          <tr>
+            <td><div class="step-num" style="background:rgba(236,72,153,0.2);color:#f9a8d4">14</div></td>
+            <td><span class="status-chip status-user">리뷰</span></td>
+            <td><span class="status-chip status-user">사용자</span></td>
+            <td>체크아웃 후 리뷰 작성 요청</td>
+            <td>예약 완료 건 검증 후 리뷰 저장</td>
+            <td>reviews INSERT, properties avg_rating UPDATE</td>
+            <td>-</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ====== AUTH ====== -->
+<div id="view-auth" class="view">
+  <div class="flow-section">
+    <div class="flow-section-title">회원/인증 상세 흐름</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1100px">
+
+      <!-- 일반 가입 -->
+      <div>
+        <div style="font-size:0.8rem;font-weight:700;color:#60a5fa;margin-bottom:12px;padding-left:4px">📧 이메일 회원가입 플로우</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+          <div class="node node-screen" style="width:100%"><div class="node-title">회원가입 화면</div><div class="node-desc">이름·이메일·비밀번호·전화번호 입력, 약관 동의 체크</div></div>
+          <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">POST /api/auth/register</span></div>
+          <div class="node node-decision" style="width:100%"><div class="node-title">🔀 이메일 중복 확인</div><div class="node-desc">users 테이블 email UQ 체크</div></div>
+          <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">중복 없음 → 진행</span></div>
+          <div class="node node-api" style="width:100%"><div class="node-title">비밀번호 해싱</div><div class="node-desc">bcrypt cost=12 해싱 처리</div></div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-db" style="width:100%"><div class="node-title">users INSERT</div><div class="node-desc">is_verified=false, user_type=guest 저장</div></div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-external" style="width:100%"><div class="node-title">인증 이메일 발송</div><div class="node-desc">SES로 인증 토큰 URL 포함 메일 발송 (24시간 만료)</div></div>
+          <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">링크 클릭</span></div>
+          <div class="node node-db" style="width:100%"><div class="node-title">users UPDATE</div><div class="node-desc">is_verified=true 갱신</div></div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-end" style="width:100%"><div class="node-title">✅ 가입 완료 → 자동 로그인</div></div>
+        </div>
+      </div>
+
+      <!-- 소셜 로그인 -->
+      <div>
+        <div style="font-size:0.8rem;font-weight:700;color:#8b5cf6;margin-bottom:12px;padding-left:4px">🔗 소셜 로그인 플로우 (카카오/구글/네이버)</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+          <div class="node node-screen" style="width:100%"><div class="node-title">로그인 화면</div><div class="node-desc">소셜 로그인 버튼 클릭</div></div>
+          <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">GET /api/auth/social/{provider}</span></div>
+          <div class="node node-external" style="width:100%"><div class="node-title">소셜 OAuth 서버</div><div class="node-desc">사용자 동의 화면 → authorization code 발급</div></div>
+          <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">callback</span></div>
+          <div class="node node-api" style="width:100%"><div class="node-title">Access Token 교환</div><div class="node-desc">code → access_token → 프로필 조회 (이름·이메일·social_id)</div></div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-decision" style="width:100%"><div class="node-title">🔀 기존 회원 여부 확인</div><div class="node-desc">social_provider + social_id 또는 email 조회</div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin:6px 0">
+            <div class="node node-db" style="text-align:center"><div class="node-title" style="font-size:0.72rem">신규 → users INSERT</div></div>
+            <div class="node node-db" style="text-align:center"><div class="node-title" style="font-size:0.72rem">기존 → last_login UPDATE</div></div>
+          </div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-api" style="width:100%"><div class="node-title">JWT 발급</div><div class="node-desc">access_token (1h) + refresh_token (7d) 발급. Redis에 refresh 저장.</div></div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-end" style="width:100%"><div class="node-title">✅ 로그인 완료 → 메인으로</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ====== SEARCH ====== -->
+<div id="view-search" class="view">
+  <div class="flow-section">
+    <div class="flow-section-title">검색/탐색 상세 흐름</div>
+    <div style="max-width:850px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+        <div class="node node-screen" style="width:100%"><div class="node-title">🔍 검색 입력 화면 (메인/검색바)</div><div class="node-desc">📍 도시 or 지역명 · 📅 체크인/아웃 날짜 · 👥 성인/아동 인원수 · 🛏 객실 수 입력</div></div>
+        <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">GET /api/properties/search?city=&checkin=&checkout=&guests=</span></div>
+        <div class="node node-api" style="width:100%"><div class="node-title">⚙️ 검색 쿼리 처리</div><div class="node-desc">파라미터 파싱 → 날짜 유효성 검증 → 가용 재고 있는 숙소 필터링</div></div>
+        <div class="arrow"><span class="arrow-down"></span></div>
+        <div class="node node-db" style="width:100%">
+          <div class="node-title">📊 DB 조회</div>
+          <div class="node-desc">
+            properties JOIN room_types JOIN room_availability<br>
+            WHERE date BETWEEN checkin AND checkout<br>
+            AND available_count > 0 AND is_approved = true
+          </div>
+        </div>
+        <div class="arrow"><span class="arrow-down"></span></div>
+        <div class="node node-screen" style="width:100%"><div class="node-title">📋 검색 결과 화면</div><div class="node-desc">카드 리스트 (썸네일·이름·평점·가격) + 지도 뷰 전환 버튼 + 필터 패널</div></div>
+        <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">필터 변경 시 재요청</span></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;margin:6px 0">
+          <div class="node node-decision"><div class="node-title">💰 가격 필터</div><div class="node-desc">min/max price range 슬라이더</div></div>
+          <div class="node node-decision"><div class="node-title">⭐ 평점 필터</div><div class="node-desc">별점 3.0+ / 4.0+ / 4.5+</div></div>
+          <div class="node node-decision"><div class="node-title">🏊 편의시설</div><div class="node-desc">property_amenities JOIN 조건 추가</div></div>
+        </div>
+        <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">정렬: 추천/가격/평점/리뷰수</span></div>
+        <div class="node node-screen" style="width:100%"><div class="node-title">🗺 지도 검색 화면</div><div class="node-desc">현재 지도 범위의 위경도 bbox로 숙소 마커 표시. 줌/이동 시 재조회. 마커 클릭 → 미니 카드 팝업</div></div>
+        <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">숙소 카드 or 마커 클릭</span></div>
+        <div class="node node-end" style="width:100%"><div class="node-title">→ 숙소 상세 페이지로 이동</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== BOOKING ====== -->
+<div id="view-booking" class="view">
+  <div class="flow-section">
+    <div class="flow-section-title">예약 상세 흐름 (숙소 상세 → 예약 완료)</div>
+    <div style="max-width:850px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+
+        <div class="node node-screen" style="width:100%">
+          <div class="node-title">🏨 숙소 상세 화면</div>
+          <div class="node-desc">이미지 갤러리 · 설명 · 편의시설 · 지도 위치 · 리뷰 요약 · 날짜별 객실 캘린더</div>
+        </div>
+        <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">GET /api/properties/{id}/rooms?checkin=&checkout=</span></div>
+        <div class="node node-db" style="width:100%"><div class="node-title">📊 가용 객실 조회</div><div class="node-desc">room_types + room_availability LEFT JOIN → 날짜 범위 내 available_count 합산</div></div>
+        <div class="arrow"><span class="arrow-down"></span></div>
+        <div class="node node-screen" style="width:100%">
+          <div class="node-title">🛏 객실 타입 선택</div>
+          <div class="node-desc">룸 타입 카드 목록 (이미지·침대·최대인원·가격·남은 객실 수). 수량 선택 드롭다운.</div>
+        </div>
+        <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">예약하기 버튼 클릭</span></div>
+        <div class="node node-decision" style="width:100%"><div class="node-title">🔀 로그인 상태 확인</div><div class="node-desc">비로그인 시 → 로그인 페이지로 redirect (예약 정보 세션 유지)</div></div>
+        <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">로그인 확인됨</span></div>
+        <div class="node node-screen" style="width:100%">
+          <div class="node-title">📋 예약 정보 입력 화면</div>
+          <div class="node-desc">
+            투숙자 이름·연락처 · 체크인/아웃 날짜 확인 · 특별 요청사항 입력<br>
+            🎟 쿠폰 코드 입력 → POST /api/coupons/validate → 할인 금액 실시간 반영<br>
+            📊 가격 요약: 객실가 × 박수 - 할인 = 최종 결제 금액
+          </div>
+        </div>
+        <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">결제하기 클릭</span></div>
+        <div class="node node-api" style="width:100%"><div class="node-title">🔒 재고 임시 잠금 (Redis)</div><div class="node-desc">SETNX hotel:lock:{room_type_id}:{date_range}:{session_id} EX 600 → 10분 Hold</div></div>
+        <div class="arrow"><span class="arrow-down"></span></div>
+        <div class="node node-decision" style="width:100%"><div class="node-title">🔀 재고 잠금 성공 여부</div><div class="node-desc">실패 시 → "다른 사용자가 예약 중" 안내 후 재조회</div></div>
+        <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">잠금 성공</span></div>
+        <div class="node node-screen" style="width:100%">
+          <div class="node-title">💳 결제 화면</div>
+          <div class="node-desc">카드결제 / 카카오페이 / 토스페이 / 네이버페이 선택. 최종 금액 확인. PG SDK 로드.</div>
+        </div>
+        <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">POST /api/payments</span></div>
+        <div class="node node-external" style="width:100%"><div class="node-title">🏦 PG사 결제 처리</div><div class="node-desc">토스페이먼츠 API → 결제 승인 요청. payments 레코드 status=pending 생성.</div></div>
+        <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">웹훅 or callback</span></div>
+        <div class="node node-decision" style="width:100%"><div class="node-title">🔀 결제 성공 여부</div></div>
+        <div style="display:grid;grid-template-columns:1fr 20px 1fr;gap:0;width:100%;margin:6px 0;align-items:start">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+            <div style="font-size:0.7rem;color:#6ee7b7;margin-bottom:6px">✅ 성공</div>
+            <div class="node node-db" style="width:100%"><div class="node-title">DB 트랜잭션 처리</div><div class="node-desc">① payments UPDATE (success)<br>② bookings INSERT (confirmed)<br>③ room_availability UPDATE (available_count-=1)<br>④ coupons used_count+=1<br>⑤ Redis 잠금 해제</div></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;padding-top:40px;color:var(--muted)">│</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+            <div style="font-size:0.7rem;color:#fca5a5;margin-bottom:6px">❌ 실패</div>
+            <div class="node node-error" style="width:100%"><div class="node-title">결제 실패 처리</div><div class="node-desc">① payments UPDATE (failed)<br>② Redis 잠금 해제<br>③ 실패 원인 안내 화면<br>④ 재시도 버튼 제공</div></div>
+          </div>
+        </div>
+        <div class="arrow"><span class="arrow-down"></span></div>
+        <div class="node node-event" style="width:100%"><div class="node-title">📨 알림 발송 (비동기)</div><div class="node-desc">SQS 메시지 → Lambda → 예약 확인 이메일 (PDF 바우처 첨부) + SMS 발송</div></div>
+        <div class="arrow"><span class="arrow-down"></span></div>
+        <div class="node node-end" style="width:100%"><div class="node-title">✅ 예약 완료 화면</div><div class="node-desc">예약번호 표시 · 예약 상세 보기 · 앱 다운로드 유도 · 유사 숙소 추천</div></div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== PAYMENT ====== -->
+<div id="view-payment" class="view">
+  <div class="flow-section">
+    <div class="flow-section-title">결제 & 취소/환불 상세 흐름</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1100px">
+
+      <!-- 결제 웹훅 -->
+      <div>
+        <div style="font-size:0.8rem;font-weight:700;color:#10b981;margin-bottom:12px;padding-left:4px">💳 PG 웹훅 처리 흐름</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+          <div class="node node-external" style="width:100%"><div class="node-title">PG사 웹훅 수신</div><div class="node-desc">POST /api/payments/confirm<br>orderId, paymentKey, amount 포함</div></div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-api" style="width:100%"><div class="node-title">Idempotency 검증</div><div class="node-desc">동일 orderId 중복 처리 방지 (Redis 체크)</div></div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-api" style="width:100%"><div class="node-title">금액 검증</div><div class="node-desc">서버에서 직접 금액 재계산 → PG 전달 금액과 대조 (변조 방지)</div></div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-external" style="width:100%"><div class="node-title">PG 최종 승인 API 호출</div><div class="node-desc">토스페이먼츠 /v1/payments/confirm</div></div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-db" style="width:100%"><div class="node-title">DB 트랜잭션 (ACID)</div><div class="node-desc">payments → bookings → room_availability 원자적 처리</div></div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-event" style="width:100%"><div class="node-title">알림 큐 발행</div><div class="node-desc">SQS에 메시지 발행 → 이메일·SMS 비동기 처리</div></div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-end" style="width:100%"><div class="node-title">✅ 200 OK 응답 → 클라이언트 완료 화면</div></div>
+        </div>
+      </div>
+
+      <!-- 취소/환불 -->
+      <div>
+        <div style="font-size:0.8rem;font-weight:700;color:#ef4444;margin-bottom:12px;padding-left:4px">❌ 취소 & 환불 흐름</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+          <div class="node node-screen" style="width:100%"><div class="node-title">예약 상세 화면</div><div class="node-desc">취소하기 버튼 클릭 → 취소 정책 안내 모달</div></div>
+          <div class="arrow"><span class="arrow-down"></span><span class="arrow-label">DELETE /api/bookings/{id}</span></div>
+          <div class="node node-api" style="width:100%"><div class="node-title">취소 정책 계산</div><div class="node-desc">cancellation_policies 조회 → 남은 일수에 따른 환불률 계산</div></div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div style="display:grid;grid-template-columns:1fr;gap:8px;width:100%">
+            <div class="node node-decision"><div class="node-title">🔀 취소 정책 분기</div>
+              <div class="node-desc">
+                체크인 7일+ 전: 100% 환불<br>
+                체크인 3~6일 전: 50% 환불<br>
+                체크인 1~2일 전: 환불 불가<br>
+                당일 취소: 위약금 부과
+              </div>
+            </div>
+          </div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-external" style="width:100%"><div class="node-title">PG사 환불 API 호출</div><div class="node-desc">토스페이먼츠 /v1/payments/{key}/cancel<br>환불 금액 명시</div></div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-db" style="width:100%"><div class="node-title">DB 업데이트</div><div class="node-desc">① bookings UPDATE (status=cancelled)<br>② payments UPDATE (refund_amount, refunded_at)<br>③ room_availability UPDATE (available_count+=1)</div></div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-event" style="width:100%"><div class="node-title">취소 확인 이메일 발송</div><div class="node-desc">환불 금액·처리 기간(영업일 3~5일) 안내</div></div>
+          <div class="arrow"><span class="arrow-down"></span></div>
+          <div class="node node-end" style="width:100%"><div class="node-title">✅ 취소 완료 화면</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ====== HOST ====== -->
+<div id="view-host" class="view">
+  <div class="flow-section">
+    <div class="flow-section-title">호스트 숙소 등록 & 관리 흐름</div>
+    <div style="max-width:800px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+        <div class="node node-screen" style="width:100%"><div class="node-title">👤 호스트 전환 신청</div><div class="node-desc">일반 회원 → 호스트 신청. 본인인증 (휴대폰/사업자번호). 관리자 검토 (1~2일)</div></div>
+        <div class="arrow"><span class="arrow-down"></span></div>
+        <div class="node node-db" style="width:100%"><div class="node-title">users UPDATE user_type=host</div></div>
+        <div class="arrow"><span class="arrow-down"></span></div>
+
+        <div class="node node-screen" style="width:100%">
+          <div class="node-title">🏨 숙소 등록 — STEP 1: 기본 정보</div>
+          <div class="node-desc">숙소 유형 선택 (호텔/펜션/모텔) · 숙소명 · 설명 · 체크인/아웃 시간 · 편의시설 체크</div>
+        </div>
+        <div class="arrow"><span class="arrow-down"></span></div>
+        <div class="node node-screen" style="width:100%">
+          <div class="node-title">🗺 숙소 등록 — STEP 2: 위치 설정</div>
+          <div class="node-desc">주소 검색 → 지도 핀 드래그로 정확한 위경도 설정. geocoding API로 좌표 변환.</div>
+        </div>
+        <div class="arrow"><span class="arrow-down"></span></div>
+        <div class="node node-screen" style="width:100%">
+          <div class="node-title">🛏 숙소 등록 — STEP 3: 객실 등록</div>
+          <div class="node-desc">룸 타입명 · 베드 타입 · 최대인원 · 면적 · 기본가격 · 총 객실수 · 취소정책 설정</div>
+        </div>
+        <div class="arrow"><span class="arrow-down"></span></div>
+        <div class="node node-screen" style="width:100%">
+          <div class="node-title">🖼 숙소 등록 — STEP 4: 사진 등록</div>
+          <div class="node-desc">드래그 앤 드롭 다중 업로드 → S3 Presigned URL 방식. 대표 이미지 선택. 순서 조정.</div>
+        </div>
+        <div class="arrow"><span class="arrow-down"></span></div>
+        <div class="node node-db" style="width:100%"><div class="node-title">properties INSERT (is_approved=false)</div><div class="node-desc">room_types INSERT · images INSERT · property_amenities INSERT · room_availability 자동 생성 (90일치)</div></div>
+        <div class="arrow"><span class="arrow-down"></span></div>
+        <div class="node node-decision" style="width:100%"><div class="node-title">🔀 관리자 승인 검토</div><div class="node-desc">관리자 어드민 화면에서 숙소 정보 확인 · 이미지 품질 · 가격 적정성 검토</div></div>
+        <div style="display:grid;grid-template-columns:1fr 20px 1fr;gap:0;width:100%;margin:6px 0;align-items:start">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+            <div style="font-size:0.7rem;color:#6ee7b7;margin-bottom:6px">✅ 승인</div>
+            <div class="node node-db" style="width:100%"><div class="node-title">is_approved=true</div><div class="node-desc">검색 결과에 노출 시작. 승인 알림 이메일 발송.</div></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;padding-top:30px;color:var(--muted)">│</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+            <div style="font-size:0.7rem;color:#fca5a5;margin-bottom:6px">❌ 반려</div>
+            <div class="node node-error" style="width:100%"><div class="node-title">반려 사유 이메일 발송</div><div class="node-desc">수정 후 재신청 가능.</div></div>
+          </div>
+        </div>
+        <div class="arrow"><span class="arrow-down"></span></div>
+        <div class="node node-screen" style="width:100%">
+          <div class="node-title">📊 호스트 대시보드</div>
+          <div class="node-desc">
+            예약 현황 캘린더 · 월별 수익 차트 · 재고 캘린더 (날짜별 가격/가용수 편집)<br>
+            리뷰 관리 (답변 작성) · 쿠폰 발급 · 정산 내역 확인
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SCREENS ====== -->
+<div id="view-screens" class="view">
+  <div class="flow-section">
+    <div class="flow-section-title">전체 화면 명세 (Screen Specifications)</div>
+    <div class="screen-grid">
+
+      <!-- 랜딩 -->
+      <div class="screen-card">
+        <div class="screen-card-header">
+          <span class="screen-icon">🏠</span>
+          <span class="screen-name">메인 / 랜딩 페이지</span>
+          <span class="screen-route">/</span>
+        </div>
+        <div class="screen-card-body">
+          <div class="spec-section">
+            <div class="spec-label" style="color:#93c5fd">UI 구성요소</div>
+            <div class="spec-items">
+              <div class="spec-item">GNB: 로고 · 검색바 · 로그인/가입 버튼 · 통화 선택</div>
+              <div class="spec-item">통합 검색바: 도시 · 날짜 · 인원 · 검색 버튼</div>
+              <div class="spec-item">추천 숙소 캐러셀 (지역별 · 인기순)</div>
+              <div class="spec-item">카테고리 퀵 필터 (호텔/펜션/리조트)</div>
+              <div class="spec-item">이번 주 특가 섹션</div>
+            </div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#6ee7b7">API 호출</div>
+            <div><span class="api-chip chip-get">GET /properties/featured</span><span class="api-chip chip-get">GET /properties/deals</span></div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#fcd34d">DB 조회</div>
+            <div><span class="db-chip">properties</span><span class="db-chip">room_availability</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 검색결과 -->
+      <div class="screen-card">
+        <div class="screen-card-header">
+          <span class="screen-icon">🔍</span>
+          <span class="screen-name">검색 결과</span>
+          <span class="screen-route">/search</span>
+        </div>
+        <div class="screen-card-body">
+          <div class="spec-section">
+            <div class="spec-label" style="color:#93c5fd">UI 구성요소</div>
+            <div class="spec-items">
+              <div class="spec-item">결과 수 · 정렬 드롭다운 (추천/가격/평점)</div>
+              <div class="spec-item">좌측: 숙소 카드 리스트 (무한 스크롤)</div>
+              <div class="spec-item">우측: 지도 (토글 가능)</div>
+              <div class="spec-item">필터 패널: 가격범위·별점·숙소유형·편의시설·취소정책</div>
+              <div class="spec-item">카드: 썸네일·이름·위치·평점·리뷰수·1박가격</div>
+            </div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#6ee7b7">API 호출</div>
+            <div><span class="api-chip chip-get">GET /properties/search</span></div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#fcd34d">DB 조회</div>
+            <div><span class="db-chip">properties</span><span class="db-chip">room_types</span><span class="db-chip">room_availability</span><span class="db-chip">property_amenities</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 숙소 상세 -->
+      <div class="screen-card">
+        <div class="screen-card-header">
+          <span class="screen-icon">🏨</span>
+          <span class="screen-name">숙소 상세</span>
+          <span class="screen-route">/properties/:id</span>
+        </div>
+        <div class="screen-card-body">
+          <div class="spec-section">
+            <div class="spec-label" style="color:#93c5fd">UI 구성요소</div>
+            <div class="spec-items">
+              <div class="spec-item">이미지 갤러리 (메인 + 그리드, 전체보기 모달)</div>
+              <div class="spec-item">숙소명·별점·리뷰수·위치 요약</div>
+              <div class="spec-item">체크인/아웃 날짜 피커 (가용 날짜 캘린더)</div>
+              <div class="spec-item">객실 타입 카드 (가격·남은방·선택 버튼)</div>
+              <div class="spec-item">편의시설 아이콘 그리드</div>
+              <div class="spec-item">지도 위치 임베드</div>
+              <div class="spec-item">리뷰 목록 (항목별 평점 + 사용자 후기)</div>
+              <div class="spec-item">찜하기 버튼 (하트 토글)</div>
+            </div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#6ee7b7">API 호출</div>
+            <div>
+              <span class="api-chip chip-get">GET /properties/:id</span>
+              <span class="api-chip chip-get">GET /properties/:id/rooms</span>
+              <span class="api-chip chip-get">GET /properties/:id/reviews</span>
+              <span class="api-chip chip-post">POST /wishlists</span>
+            </div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#fcd34d">DB 조회</div>
+            <div><span class="db-chip">properties</span><span class="db-chip">room_types</span><span class="db-chip">amenities</span><span class="db-chip">reviews</span><span class="db-chip">images</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 예약 입력 -->
+      <div class="screen-card">
+        <div class="screen-card-header">
+          <span class="screen-icon">📋</span>
+          <span class="screen-name">예약 정보 입력</span>
+          <span class="screen-route">/booking/new</span>
+        </div>
+        <div class="screen-card-body">
+          <div class="spec-section">
+            <div class="spec-label" style="color:#93c5fd">UI 구성요소</div>
+            <div class="spec-items">
+              <div class="spec-item">숙소 요약 카드 (썸네일·이름·날짜·인원)</div>
+              <div class="spec-item">투숙자 정보 폼 (이름·이메일·연락처)</div>
+              <div class="spec-item">특별 요청사항 텍스트 에어리어</div>
+              <div class="spec-item">쿠폰 코드 입력 + 적용 버튼</div>
+              <div class="spec-item">가격 상세 내역 (객실가·박수·쿠폰할인·최종금액)</div>
+              <div class="spec-item">취소 정책 안내 섹션</div>
+            </div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#6ee7b7">API 호출</div>
+            <div><span class="api-chip chip-post">POST /coupons/validate</span><span class="api-chip chip-post">POST /bookings</span></div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#fcd34d">DB 조회</div>
+            <div><span class="db-chip">coupons</span><span class="db-chip">room_availability</span><span class="db-chip">bookings (INSERT)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 결제 -->
+      <div class="screen-card">
+        <div class="screen-card-header">
+          <span class="screen-icon">💳</span>
+          <span class="screen-name">결제 화면</span>
+          <span class="screen-route">/booking/payment</span>
+        </div>
+        <div class="screen-card-body">
+          <div class="spec-section">
+            <div class="spec-label" style="color:#93c5fd">UI 구성요소</div>
+            <div class="spec-items">
+              <div class="spec-item">재고 타이머 (10분 카운트다운)</div>
+              <div class="spec-item">결제 수단 탭 (카드/카카오페이/토스/네이버페이)</div>
+              <div class="spec-item">카드: 카드사·할부 선택</div>
+              <div class="spec-item">최종 결제 금액 하단 고정 바</div>
+              <div class="spec-item">결제 진행 버튼 → PG SDK 실행</div>
+            </div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#6ee7b7">API 호출</div>
+            <div><span class="api-chip chip-post">POST /payments</span><span class="api-chip chip-post">POST /payments/confirm</span></div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#c4b5fd">외부 연동</div>
+            <div><span class="api-chip" style="background:rgba(139,92,246,0.15);color:#c4b5fd;border-color:rgba(139,92,246,0.2)">토스페이먼츠 SDK</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 예약 완료 -->
+      <div class="screen-card">
+        <div class="screen-card-header">
+          <span class="screen-icon">✅</span>
+          <span class="screen-name">예약 완료</span>
+          <span class="screen-route">/booking/complete/:id</span>
+        </div>
+        <div class="screen-card-body">
+          <div class="spec-section">
+            <div class="spec-label" style="color:#93c5fd">UI 구성요소</div>
+            <div class="spec-items">
+              <div class="spec-item">예약 확인 애니메이션 (체크마크)</div>
+              <div class="spec-item">예약번호 (크게 강조)</div>
+              <div class="spec-item">예약 요약 정보 카드</div>
+              <div class="spec-item">이메일 발송 안내</div>
+              <div class="spec-item">예약 상세 보기 버튼</div>
+              <div class="spec-item">유사 숙소 추천 캐러셀</div>
+            </div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#6ee7b7">API 호출</div>
+            <div><span class="api-chip chip-get">GET /bookings/:id</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 마이페이지 예약목록 -->
+      <div class="screen-card">
+        <div class="screen-card-header">
+          <span class="screen-icon">📱</span>
+          <span class="screen-name">마이페이지 — 예약 목록</span>
+          <span class="screen-route">/my/bookings</span>
+        </div>
+        <div class="screen-card-body">
+          <div class="spec-section">
+            <div class="spec-label" style="color:#93c5fd">UI 구성요소</div>
+            <div class="spec-items">
+              <div class="spec-item">탭: 예정 · 완료 · 취소됨</div>
+              <div class="spec-item">예약 카드: 숙소 썸네일·이름·날짜·상태 배지·금액</div>
+              <div class="spec-item">예약 상세 보기 → 취소 버튼 (취소 가능 기간만)</div>
+              <div class="spec-item">완료 건 → 리뷰 작성 CTA 버튼</div>
+              <div class="spec-item">예약 확인서 PDF 다운로드</div>
+            </div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#6ee7b7">API 호출</div>
+            <div><span class="api-chip chip-get">GET /users/me/bookings</span><span class="api-chip chip-chip">DELETE /bookings/:id</span></div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#fcd34d">DB 조회</div>
+            <div><span class="db-chip">bookings</span><span class="db-chip">payments</span><span class="db-chip">room_types</span><span class="db-chip">properties</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 리뷰 작성 -->
+      <div class="screen-card">
+        <div class="screen-card-header">
+          <span class="screen-icon">✍️</span>
+          <span class="screen-name">리뷰 작성</span>
+          <span class="screen-route">/reviews/write/:bookingId</span>
+        </div>
+        <div class="screen-card-body">
+          <div class="spec-section">
+            <div class="spec-label" style="color:#93c5fd">UI 구성요소</div>
+            <div class="spec-items">
+              <div class="spec-item">숙소 정보 요약 (이름·날짜)</div>
+              <div class="spec-item">항목별 별점 슬라이더 (전체/청결/위치/서비스/가격)</div>
+              <div class="spec-item">텍스트 리뷰 (최소 20자)</div>
+              <div class="spec-item">이미지 첨부 (최대 5장)</div>
+              <div class="spec-item">익명 리뷰 옵션</div>
+            </div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#6ee7b7">API 호출</div>
+            <div><span class="api-chip chip-post">POST /reviews</span></div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#fcd34d">DB 조작</div>
+            <div><span class="db-chip">reviews INSERT</span><span class="db-chip">properties avg_rating UPDATE</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 호스트 대시보드 -->
+      <div class="screen-card">
+        <div class="screen-card-header">
+          <span class="screen-icon">📊</span>
+          <span class="screen-name">호스트 대시보드</span>
+          <span class="screen-route">/host/dashboard</span>
+        </div>
+        <div class="screen-card-body">
+          <div class="spec-section">
+            <div class="spec-label" style="color:#93c5fd">UI 구성요소</div>
+            <div class="spec-items">
+              <div class="spec-item">월별 수익 바 차트</div>
+              <div class="spec-item">이번 달 예약수·점유율·평균 평점 KPI 카드</div>
+              <div class="spec-item">예약 현황 테이블 (오늘 체크인/아웃)</div>
+              <div class="spec-item">재고 캘린더 (날짜 클릭 → 가격·가용수 편집)</div>
+              <div class="spec-item">미답변 리뷰 알림 배지</div>
+              <div class="spec-item">정산 내역 탭</div>
+            </div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#6ee7b7">API 호출</div>
+            <div>
+              <span class="api-chip chip-get">GET /host/dashboard</span>
+              <span class="api-chip chip-put">PUT /host/availability</span>
+            </div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#fcd34d">DB 조회</div>
+            <div><span class="db-chip">bookings</span><span class="db-chip">payments</span><span class="db-chip">room_availability</span><span class="db-chip">reviews</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 관리자 어드민 -->
+      <div class="screen-card">
+        <div class="screen-card-header">
+          <span class="screen-icon">🛠</span>
+          <span class="screen-name">관리자 어드민</span>
+          <span class="screen-route">/admin</span>
+        </div>
+        <div class="screen-card-body">
+          <div class="spec-section">
+            <div class="spec-label" style="color:#93c5fd">UI 구성요소</div>
+            <div class="spec-items">
+              <div class="spec-item">숙소 승인 대기 목록 (승인/반려 버튼)</div>
+              <div class="spec-item">전체 예약 현황 모니터링</div>
+              <div class="spec-item">회원 관리 (정지/탈퇴 처리)</div>
+              <div class="spec-item">리뷰 신고 처리 (숨김/삭제)</div>
+              <div class="spec-item">쿠폰 생성·관리</div>
+              <div class="spec-item">매출 통계 대시보드</div>
+            </div>
+          </div>
+          <div class="spec-section">
+            <div class="spec-label" style="color:#fcd34d">주요 DB 테이블</div>
+            <div><span class="db-chip">properties</span><span class="db-chip">users</span><span class="db-chip">bookings</span><span class="db-chip">reviews</span><span class="db-chip">coupons</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

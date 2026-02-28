@@ -1,0 +1,18 @@
+current directory: /home/y510p/my_projects/clkhotel/vendor/bundle/ruby/3.2.0/gems/racc-1.8.1/ext/racc/cparse
+/home/y510p/.rbenv/versions/3.2.3/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /home/y510p/my_projects/clkhotel/vendor/bundle/ruby/3.2.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20260222-7013-nuq6sf sitelibdir\=./.gem.20260222-7013-nuq6sf clean
+
+current directory: /home/y510p/my_projects/clkhotel/vendor/bundle/ruby/3.2.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20260222-7013-nuq6sf sitelibdir\=./.gem.20260222-7013-nuq6sf
+compiling cparse.c
+linking shared-object racc/cparse.so
+
+current directory: /home/y510p/my_projects/clkhotel/vendor/bundle/ruby/3.2.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20260222-7013-nuq6sf sitelibdir\=./.gem.20260222-7013-nuq6sf install
+/usr/bin/install -c -m 0755 cparse.so ./.gem.20260222-7013-nuq6sf/racc
+
+current directory: /home/y510p/my_projects/clkhotel/vendor/bundle/ruby/3.2.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20260222-7013-nuq6sf sitelibdir\=./.gem.20260222-7013-nuq6sf clean

@@ -1,0 +1,126 @@
+<main class="listings-main">
+  <div class="listings-header">
+    <h1>객실 유형 수정</h1>
+    <div style="display:flex; gap:10px;">
+      <%= link_to "재고 관리", host_room_type_inventory_path(@room_type) %>
+      <%= link_to "숙소 상세", host_property_path(@room_type.property) %>
+    </div>
+  </div>
+
+  <section class="hotel-search-box">
+    <% if @room_type.errors.any? %>
+      <div class="flash flash--alert" style="margin:0 0 12px 0;">
+        <%= @room_type.errors.full_messages.to_sentence %>
+      </div>
+    <% end %>
+
+    <%= form_with model: [:host, @room_type], local: true do |f| %>
+      <div class="hotel-search-form" style="grid-template-columns: repeat(3, minmax(160px, 1fr));">
+        <div class="field-group"><%= f.label :room_name, "객실명" %><%= f.text_field :room_name, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :room_type, "객실 타입" %><%= f.select :room_type, RoomType.room_types.keys, {}, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :bed_type, "침대 타입" %><%= f.select :bed_type, RoomType.bed_types.keys, {}, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :max_guests, "최대 인원" %><%= f.number_field :max_guests, min: 1, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :total_count, "총 객실 수" %><%= f.number_field :total_count, min: 1, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :base_price, "기본 요금" %><%= f.number_field :base_price, min: 0, step: 100, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :currency, "통화" %><%= f.text_field :currency, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :area_sqm, "면적(㎡)" %><%= f.number_field :area_sqm, step: 0.1, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :floor, "층수" %><%= f.number_field :floor, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :view_type, "전망" %><%= f.text_field :view_type, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :is_smoking, "흡연 가능" %><%= f.select :is_smoking, [["아니오", false], ["예", true]], {}, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :cancellation_policy_name, "취소 정책" %><%= f.text_field :cancellation_policy_name, class: "field-input" %></div>
+      </div>
+      <%= f.submit "객실 유형 수정", class: "search-button", style: "margin-top:12px;" %>
+    <% end %>
+  </section>
+
+  <section class="post-list-box">
+    <div class="post-list-header">
+      <h2>객실 이미지 관리</h2>
+      <span>여러 장 등록 / 썸네일 지정 / 정렬</span>
+    </div>
+
+    <%= form_with model: [:host, @room_type, Image.new(entity_type: :room, sort_order: (@room_type.room_images.maximum(:sort_order).to_i + 1))],
+                  url: host_room_type_images_path(@room_type),
+                  local: true,
+                  multipart: true do |f| %>
+      <div class="hotel-search-form" style="grid-template-columns: minmax(200px, 1fr) minmax(240px, 1fr) 140px 140px auto;">
+        <div class="field-group">
+          <%= f.label :file, "이미지 파일" %>
+          <%= f.file_field :file, accept: "image/*", class: "field-input" %>
+        </div>
+        <div class="field-group">
+          <%= f.label :image_url, "이미지 URL (선택)" %>
+          <%= f.url_field :image_url, class: "field-input", placeholder: "https://..." %>
+        </div>
+        <div class="field-group">
+          <%= f.label :sort_order, "정렬순서" %>
+          <%= f.number_field :sort_order, min: 1, class: "field-input" %>
+        </div>
+        <div class="field-group">
+          <%= f.label :is_thumbnail, "썸네일" %>
+          <%= f.select :is_thumbnail, [["아니오", false], ["예", true]], {}, class: "field-input" %>
+        </div>
+        <div class="field-group">
+          <%= f.label :submit, "추가" %>
+          <%= f.submit "이미지 추가", class: "search-button" %>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="design-grid" style="margin-top:14px;">
+      <% @room_type.room_images.each do |image| %>
+        <article class="design-card">
+          <div class="design-card__header">
+            <h2 style="font-size:16px;">이미지 #<%= image.id %> <%= "(썸네일)" if image.is_thumbnail? %></h2>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <%= button_to "↑", host_room_type_move_up_image_path(@room_type, image_id: image.id), method: :patch, class: "nav-link" %>
+              <%= button_to "↓", host_room_type_move_down_image_path(@room_type, image_id: image.id), method: :patch, class: "nav-link" %>
+              <%= button_to "썸네일 지정", host_room_type_make_thumbnail_image_path(@room_type, image_id: image.id), method: :patch, class: "nav-link" %>
+              <%= button_to "삭제", host_room_type_image_path(@room_type, image), method: :delete, class: "nav-logout", form: { data: { turbo_confirm: "이미지를 삭제할까요?" } } %>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 220px 1fr; gap:12px; align-items:start;">
+            <div>
+              <% if image.display_source.present? %>
+                <%= image_tag image.display_source, alt: "객실 이미지 미리보기", class: "listing-thumb", style: "height:140px;" %>
+              <% else %>
+                <div class="listing-thumb placeholder" style="height:140px;">No Image</div>
+              <% end %>
+            </div>
+            <div>
+              <%= form_with model: [:host, @room_type, image], url: host_room_type_image_path(@room_type, image), method: :patch, local: true, multipart: true do |f| %>
+                <div class="field-group">
+                  <%= f.label :file, "이미지 파일 (선택)" %>
+                  <%= f.file_field :file, accept: "image/*", class: "field-input" %>
+                </div>
+                <div class="field-group" style="margin-top:10px;">
+                  <%= f.label :image_url, "이미지 URL (선택)" %>
+                  <%= f.url_field :image_url, class: "field-input" %>
+                </div>
+                <div class="hotel-search-form" style="grid-template-columns: 140px 140px auto; margin-top:10px;">
+                  <div class="field-group">
+                    <%= f.label :sort_order, "정렬순서" %>
+                    <%= f.number_field :sort_order, min: 1, class: "field-input" %>
+                  </div>
+                  <div class="field-group">
+                    <%= f.label :is_thumbnail, "썸네일" %>
+                    <%= f.select :is_thumbnail, [["아니오", false], ["예", true]], {}, class: "field-input" %>
+                  </div>
+                  <div class="field-group">
+                    <%= f.label :submit, "저장" %>
+                    <%= f.submit "이미지 수정", class: "search-button" %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </article>
+      <% end %>
+
+      <% if @room_type.room_images.empty? %>
+        <p class="post-empty">등록된 객실 이미지가 없습니다.</p>
+      <% end %>
+    </div>
+  </section>
+</main>

@@ -1,0 +1,10 @@
+<main class="listings-main">
+  <div class="listings-header"><h1>로그인</h1></div>
+  <section class="hotel-search-box" style="max-width:560px;">
+    <%= form_with url: login_path, local: true do |form| %>
+      <div class="field-group"><%= form.label :email, "이메일" %><%= form.email_field :email, required: true, class: "field-input" %></div>
+      <div class="field-group" style="margin-top:10px;"><%= form.label :password, "비밀번호" %><%= form.password_field :password, required: true, class: "field-input" %></div>
+      <%= form.submit "로그인", class: "search-button", style: "margin-top:12px;" %>
+    <% end %>
+  </section>
+</main>

@@ -1,0 +1,50 @@
+<main class="listings-main">
+  <div class="listings-header">
+    <h1>숙소 검색</h1>
+  </div>
+
+  <section class="hotel-search-box">
+    <%= form_with url: properties_path, method: :get, local: true, class: "hotel-search-form" do |f| %>
+      <div class="field-group"><%= f.label :q, "검색어" %><%= f.text_field :q, value: @filters[:q], class: "field-input" %></div>
+      <div class="field-group"><%= f.label :city, "도시" %><%= f.select :city, options_for_select(@cities, @filters[:city]), { prompt: "전체" }, class: "field-input" %></div>
+      <div class="field-group"><%= f.label :check_in_date, "체크인" %><%= f.date_field :check_in_date, value: @filters[:check_in_date], class: "field-input" %></div>
+      <div class="field-group"><%= f.label :check_out_date, "체크아웃" %><%= f.date_field :check_out_date, value: @filters[:check_out_date], class: "field-input" %></div>
+      <div class="field-group"><%= f.label :guests, "인원" %><%= f.number_field :guests, min: 1, value: @filters[:guests], class: "field-input" %></div>
+      <%= f.submit "검색", class: "search-button" %>
+    <% end %>
+  </section>
+
+  <div class="listing-cards">
+    <% @properties.each do |property| %>
+      <article class="listing-card <%= 'listing-card--disabled' if property.closed_for_guest? %>">
+        <div class="listing-card__media">
+          <% if property.property_image&.display_source.present? %>
+            <%= image_tag property.property_image.display_source, alt: "#{property.property_name} 대표 이미지", class: "listing-thumb" %>
+          <% else %>
+            <div class="listing-thumb placeholder"><%= property.property_type.humanize %></div>
+          <% end %>
+          <% if property.closed_for_guest? %>
+            <div class="listing-card__overlay">준비중</div>
+          <% end %>
+        </div>
+        <div class="listing-card__content">
+          <h2>
+            <% if property.closed_for_guest? %>
+              <span class="listing-card__title-disabled"><%= property.property_name %></span>
+            <% else %>
+              <%= link_to property.property_name, property_path(property, check_in_date: @filters[:check_in_date], check_out_date: @filters[:check_out_date], guest_count: @filters[:guests]) %>
+            <% end %>
+          </h2>
+          <p><%= property.city %> · <%= property.address %></p>
+          <p>호스트: <%= property.host.name %></p>
+          <p>객실 유형 <%= property.room_types.count %>개 · 최저 <%= number_to_currency(property.min_price || 0, unit: "₩", precision: 0) %></p>
+          <p>평점 <%= property.avg_rating %> / 리뷰 <%= property.review_count %></p>
+        </div>
+      </article>
+    <% end %>
+
+    <% if @properties.empty? %>
+      <p class="post-empty">검색 결과가 없습니다.</p>
+    <% end %>
+  </div>
+</main>

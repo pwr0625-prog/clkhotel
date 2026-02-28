@@ -1,0 +1,270 @@
+<main class="listings-main">
+  <section class="hotel-search-box">
+    <div class="post-list-header">
+      <div>
+        <h1 class="home-title" style="font-size: 2rem"><%= @property.property_name %></h1>
+        <p class="home-subtitle"><%= @property.city %> · <%= @property.address %></p>
+      </div>
+      <div>
+        <% if logged_in? %>
+          <% if @wishlist %>
+            <%= button_to "찜 해제", wishlist_path(@wishlist, property_id: @property.id), method: :delete, class: "nav-logout" %>
+          <% else %>
+            <%= button_to "찜 추가", wishlists_path(property_id: @property.id), method: :post, class: "new-listing-link" %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+    <p>숙소 유형: <strong><%= @property.property_type %></strong> · 체크인 <%= @property.check_in_time&.strftime('%H:%M') || '-' %> / 체크아웃 <%= @property.check_out_time&.strftime('%H:%M') || '-' %></p>
+    <p><%= @property.description.presence || "숙소 설명이 아직 등록되지 않았습니다." %></p>
+    <% if @property.amenities.any? %>
+      <p>편의시설: <%= @property.amenities.pluck(:name).join(', ') %></p>
+    <% end %>
+  </section>
+
+  <section class="post-list-box">
+    <div class="post-list-header"><h2>객실 선택</h2><span>예약 입력 → 결제 → 예약 완료</span></div>
+
+    <% @property.room_types.each do |room_type| %>
+      <article class="listing-card room-option-card" style="margin-bottom:14px;">
+        <div class="listing-card__media">
+          <% if room_type.thumbnail_image&.display_source.present? %>
+            <%= image_tag room_type.thumbnail_image.display_source,
+                          alt: "#{room_type.room_name} 이미지",
+                          class: "listing-thumb",
+                          ondblclick: "openRoomImageModal(#{room_type.id})",
+                          title: "더블클릭하여 전체 이미지 보기",
+                          style: "cursor: zoom-in;" %>
+          <% else %>
+            <div class="listing-thumb placeholder"><%= room_type.room_type.humanize %></div>
+          <% end %>
+        </div>
+        <div class="listing-card__content">
+          <h2><%= room_type.room_name %></h2>
+          <p><%= room_type.bed_type %> 침대 · 최대 <%= room_type.max_guests %>명 · 재고 <%= room_type.total_count %>실</p>
+          <p>면적 <%= room_type.area_sqm || '-' %>㎡ · 전망 <%= room_type.view_type.presence || '-' %> · 금연 <%= room_type.is_smoking? ? '아니오' : '예' %></p>
+          <p><strong><%= number_to_currency(room_type.base_price, unit: '₩', precision: 0) %></strong> / 박</p>
+          <% if room_type.room_images.any? %>
+            <p>이미지 <%= room_type.room_images.count %>장 · 썸네일 <%= room_type.thumbnail_image ? "지정됨" : "없음" %></p>
+          <% end %>
+
+          <% if logged_in? && current_user.guest? %>
+            <% if @booking&.errors&.any? && @booking.room_type_id.to_i == room_type.id %>
+              <div class="flash flash--alert" style="margin: 10px 0 0;">
+                <%= @booking.errors.full_messages.to_sentence %>
+              </div>
+            <% end %>
+            <%= form_with model: Booking.new, url: bookings_path, local: true do |f| %>
+              <%= f.hidden_field :room_type_id, value: room_type.id %>
+              <div class="hotel-search-form" style="grid-template-columns: repeat(5, minmax(120px, 1fr)); margin-top: 10px;">
+                <div class="field-group">
+                  <%= f.label :check_in_date, "체크인" %>
+                  <%= f.date_field :check_in_date, value: @booking.check_in_date || Date.current + 7, class: "field-input" %>
+                </div>
+                <div class="field-group">
+                  <%= f.label :check_out_date, "체크아웃" %>
+                  <%= f.date_field :check_out_date, value: @booking.check_out_date || Date.current + 8, class: "field-input" %>
+                </div>
+                <div class="field-group">
+                  <%= f.label :guest_count, "인원" %>
+                  <%= f.number_field :guest_count, min: 1, value: @booking.guest_count || 1, class: "field-input" %>
+                </div>
+                <div class="field-group">
+                  <%= f.label :room_count, "객실수" %>
+                  <%= f.number_field :room_count, min: 1, max: room_type.total_count, value: 1, class: "field-input" %>
+                </div>
+                <div class="field-group">
+                  <%= f.label :coupon_code, "쿠폰" %>
+                  <%= f.text_field :coupon_code, class: "field-input", placeholder: "WELCOME10" %>
+                </div>
+              </div>
+              <div class="field-group" style="margin-top:10px;">
+                <%= f.label :guest_requests, "요청사항" %>
+                <%= f.text_area :guest_requests, rows: 2, class: "field-input", style: "height:auto; padding:10px;" %>
+              </div>
+              <%= f.submit "예약 생성 (결제 단계로 이동)", class: "search-button", style: "margin-top:10px;" %>
+            <% end %>
+          <% elsif !logged_in? %>
+            <p><%= link_to "로그인 후 예약", login_path %></p>
+          <% else %>
+            <p class="post-empty">게스트 계정에서 예약할 수 있습니다.</p>
+          <% end %>
+        </div>
+      </article>
+
+      <% if room_type.room_images.any? %>
+        <div id="room-image-modal-<%= room_type.id %>" class="room-image-modal" style="display:none;">
+          <div class="room-image-modal__backdrop" onclick="closeRoomImageModal(<%= room_type.id %>)"></div>
+          <div class="room-image-modal__panel" role="dialog" aria-modal="true" aria-label="<%= room_type.room_name %> 전체 이미지">
+            <div class="room-image-modal__header">
+              <h3><%= room_type.room_name %> 이미지 (<%= room_type.room_images.count %>장)</h3>
+              <button type="button" class="nav-logout" onclick="closeRoomImageModal(<%= room_type.id %>)">닫기</button>
+            </div>
+            <div class="room-image-modal__grid">
+              <% room_type.room_images.each_with_index do |img, idx| %>
+                <% next unless img.display_source.present? %>
+                <%= image_tag img.display_source,
+                              alt: "#{room_type.room_name} 이미지",
+                              class: "room-image-modal__image",
+                              data: { gallery_item: "true", index: idx },
+                              style: (idx == 0 ? "" : "display:none;") %>
+              <% end %>
+            </div>
+            <div class="room-image-modal__footer">
+              <button type="button" class="nav-link" onclick="prevRoomImage(<%= room_type.id %>)">이전</button>
+              <span id="room-image-modal-counter-<%= room_type.id %>">1 / <%= room_type.room_images.count %></span>
+              <button type="button" class="nav-link" onclick="nextRoomImage(<%= room_type.id %>)">다음</button>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </section>
+
+  <section class="post-list-box">
+    <div class="post-list-header"><h2>리뷰</h2><span>평점 <%= @property.avg_rating %> / <%= @property.review_count %>개</span></div>
+    <% @property.reviews.where(is_visible: true).includes(:user).order(created_at: :desc).each do |review| %>
+      <div class="post-list-item">
+        <h3><%= review.user.name %> · <%= review.rating_overall %>/5</h3>
+        <p><span>청결 <%= review.rating_cleanliness || '-' %></span><span>위치 <%= review.rating_location || '-' %></span><span>서비스 <%= review.rating_service || '-' %></span><span>가성비 <%= review.rating_value || '-' %></span></p>
+        <p><%= review.content.presence || "(리뷰 내용 없음)" %></p>
+      </div>
+    <% end %>
+    <% if @property.reviews.where(is_visible: true).empty? %><p class="post-empty">아직 리뷰가 없습니다.</p><% end %>
+  </section>
+</main>
+
+<script>
+  const roomImageModalState = {};
+
+  function openRoomImageModal(roomTypeId) {
+    const modal = document.getElementById(`room-image-modal-${roomTypeId}`);
+    if (!modal) return;
+    roomImageModalState[roomTypeId] = 0;
+    renderRoomImageModal(roomTypeId);
+    modal.style.display = "block";
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeRoomImageModal(roomTypeId) {
+    const modal = document.getElementById(`room-image-modal-${roomTypeId}`);
+    if (!modal) return;
+    modal.style.display = "none";
+    document.body.style.overflow = "";
+  }
+
+  function galleryImages(roomTypeId) {
+    const modal = document.getElementById(`room-image-modal-${roomTypeId}`);
+    if (!modal) return [];
+    return Array.from(modal.querySelectorAll('[data-gallery-item="true"]'));
+  }
+
+  function renderRoomImageModal(roomTypeId) {
+    const images = galleryImages(roomTypeId);
+    if (!images.length) return;
+
+    const currentIndex = Math.max(0, Math.min(roomImageModalState[roomTypeId] || 0, images.length - 1));
+    roomImageModalState[roomTypeId] = currentIndex;
+
+    images.forEach((img, idx) => {
+      img.style.display = idx === currentIndex ? "block" : "none";
+    });
+
+    const counter = document.getElementById(`room-image-modal-counter-${roomTypeId}`);
+    if (counter) counter.textContent = `${currentIndex + 1} / ${images.length}`;
+  }
+
+  function prevRoomImage(roomTypeId) {
+    const images = galleryImages(roomTypeId);
+    if (!images.length) return;
+    const current = roomImageModalState[roomTypeId] || 0;
+    roomImageModalState[roomTypeId] = (current - 1 + images.length) % images.length;
+    renderRoomImageModal(roomTypeId);
+  }
+
+  function nextRoomImage(roomTypeId) {
+    const images = galleryImages(roomTypeId);
+    if (!images.length) return;
+    const current = roomImageModalState[roomTypeId] || 0;
+    roomImageModalState[roomTypeId] = (current + 1) % images.length;
+    renderRoomImageModal(roomTypeId);
+  }
+
+  document.addEventListener("keydown", function(event) {
+    if (event.key === "ArrowLeft") {
+      const openModal = document.querySelector('.room-image-modal[style*="display: block"]');
+      if (openModal) prevRoomImage(Number(openModal.id.replace("room-image-modal-", "")));
+      return;
+    }
+    if (event.key === "ArrowRight") {
+      const openModal = document.querySelector('.room-image-modal[style*="display: block"]');
+      if (openModal) nextRoomImage(Number(openModal.id.replace("room-image-modal-", "")));
+      return;
+    }
+    if (event.key !== "Escape") return;
+
+    document.querySelectorAll(".room-image-modal").forEach(function(modal) {
+      if (modal.style.display === "block") {
+        modal.style.display = "none";
+      }
+    });
+    document.body.style.overflow = "";
+  });
+</script>
+
+<style>
+  .room-image-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+  }
+
+  .room-image-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.7);
+    backdrop-filter: blur(2px);
+  }
+
+  .room-image-modal__panel {
+    position: relative;
+    margin: 4vh auto;
+    width: min(1080px, calc(100vw - 32px));
+    max-height: 92vh;
+    overflow: auto;
+    border-radius: 16px;
+    padding: 16px;
+    background: #fff;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+  }
+
+  .room-image-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .room-image-modal__header h3 {
+    margin: 0;
+    font-size: 18px;
+  }
+
+  .room-image-modal__image {
+    width: 100%;
+    height: min(70vh, 620px);
+    object-fit: contain;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+  }
+
+  .room-image-modal__footer {
+    margin-top: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+  }
+</style>

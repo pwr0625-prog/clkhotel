@@ -1,0 +1,13 @@
+one:
+  name: Guest One
+  email: one@example.com
+  role: 0
+  password_salt: fixture_salt
+  password_digest: <%= User.digest("password123", "fixture_salt") %>
+
+two:
+  name: Host One
+  email: host@example.com
+  role: 1
+  password_salt: fixture_salt2
+  password_digest: <%= User.digest("password123", "fixture_salt2") %>

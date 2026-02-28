@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "ClkHotel" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="ClkHotel">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+  </head>
+
+  <body>
+    <nav class="top-nav">
+      <%= link_to root_path, class: "brand-logo", aria: { label: "ClkHotel 홈" } do %>
+        <span class="brand-logo__mark">CH</span>
+        <span class="brand-logo__text">ClkHotel</span>
+      <% end %>
+      <%= link_to "홈", root_path, class: "nav-link" %>
+      <%= link_to "숙소 검색", properties_path, class: "nav-link" %>
+      <%= link_to "Design", design_path, class: "nav-link" %>
+
+      <% if logged_in? %>
+        <%= link_to "내 예약", my_bookings_path, class: "nav-link" if current_user.guest? || current_user.admin? %>
+        <%= link_to "호스트", host_root_path, class: "nav-link" if current_user.host? || current_user.admin? %>
+        <%= link_to "내 정보", user_path(current_user), class: "nav-link" %>
+        <span class="user-chip"><%= current_user.name %> · <%= current_user.role_label %></span>
+        <%= button_to "로그아웃", logout_path, method: :delete, class: "nav-logout" %>
+      <% else %>
+        <%= link_to "회원가입", signup_path, class: "nav-link" %>
+        <%= link_to "로그인", login_path, class: "nav-link" %>
+      <% end %>
+    </nav>
+
+    <% if notice %><p class="flash flash--notice"><%= notice %></p><% end %>
+    <% if alert %><p class="flash flash--alert"><%= alert %></p><% end %>
+
+    <%= yield %>
+  </body>
+</html>

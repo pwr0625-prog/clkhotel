@@ -1,0 +1,49 @@
+<h1>hostel 검색 (게스트)</h1>
+
+<%= form_with url: search_listings_path, method: :get, scope: :search do |form| %>
+  <div>
+    <%= form.label :listing_id, "호텔명" %><br>
+    <%= form.select :listing_id,
+                    options_from_collection_for_select(@listing_options, :id, :title, @search[:listing_id]),
+                    { prompt: "호텔을 선택하세요" } %>
+  </div>
+
+  <div>
+    <%= form.label :location, "지역" %><br>
+    <%= form.text_field :location, value: @search[:location] %>
+  </div>
+
+  <div>
+    <%= form.label :check_in, "체크인" %><br>
+    <%= form.date_field :check_in, value: @search[:check_in] %>
+  </div>
+
+  <div>
+    <%= form.label :check_out, "체크아웃" %><br>
+    <%= form.date_field :check_out, value: @search[:check_out] %>
+  </div>
+
+  <div>
+    <%= form.label :guests_count, "인원 수" %><br>
+    <%= form.number_field :guests_count, min: 1, step: 1, value: @search[:guests_count] %>
+  </div>
+
+  <div>
+    <%= form.submit "검색" %>
+  </div>
+<% end %>
+
+<h2>검색 결과</h2>
+<% if @results.any? %>
+  <ul>
+    <% @results.each do |listing| %>
+      <li>
+        <h3><%= link_to listing.title, listing %></h3>
+        <p><%= listing.location %> | 1박 <%= number_to_currency(listing.price) %> | 최대 <%= listing.capacity %>명</p>
+        <p>호스트: <%= listing.host.name %></p>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p>조건에 맞는 hostel가 없습니다.</p>
+<% end %>

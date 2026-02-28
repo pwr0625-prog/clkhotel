@@ -1,0 +1,10 @@
+<main class="listings-main">
+  <div class="listings-header"><h1>내 정보</h1></div>
+  <section class="post-list-box">
+    <p><strong>이름:</strong> <%= @user.name %></p>
+    <p><strong>이메일:</strong> <%= @user.email %></p>
+    <p><strong>전화번호:</strong> <%= @user.phone.presence || '-' %></p>
+    <p><strong>회원 유형:</strong> <%= @user.role_label %></p>
+    <p><strong>최근 로그인:</strong> <%= @user.last_login_at || '-' %></p>
+  </section>
+</main>

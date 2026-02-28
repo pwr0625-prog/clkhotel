@@ -1,0 +1,140 @@
+<main class="listings-main">
+  <div class="listings-header">
+    <h1>객실 재고 관리</h1>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <%= link_to "객실 유형 수정", edit_host_room_type_path(@room_type) %>
+      <%= link_to "숙소 상세", host_property_path(@room_type.property) %>
+    </div>
+  </div>
+
+  <section class="hotel-search-box">
+    <p>
+      <strong><%= @room_type.property.property_name %></strong> · <%= @room_type.room_name %>
+      / 기본 재고 <%= @room_type.total_count %>실 / 기본요금 <%= number_to_currency(@room_type.base_price, unit: "₩", precision: 0) %>
+    </p>
+
+    <%= form_with url: host_room_type_inventory_path(@room_type), method: :get, local: true do |f| %>
+      <div class="hotel-search-form" style="grid-template-columns: 180px 180px auto;">
+        <div class="field-group">
+          <%= f.label :from, "조회 시작일" %>
+          <%= f.date_field :from, value: @from_date, class: "field-input" %>
+        </div>
+        <div class="field-group">
+          <%= f.label :to, "조회 종료일" %>
+          <%= f.date_field :to, value: @to_date, class: "field-input" %>
+        </div>
+        <div class="field-group">
+          <%= f.label :submit, "조회" %>
+          <%= f.submit "기간 조회", class: "search-button" %>
+        </div>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="post-list-box">
+    <div class="post-list-header">
+      <h2>기간 일괄 설정</h2>
+      <span><%= @from_date %> ~ <%= @to_date %></span>
+    </div>
+
+    <%= form_with url: host_room_type_inventory_path(@room_type), method: :patch, local: true do |f| %>
+      <div class="hotel-search-form" style="grid-template-columns: 160px 160px 160px 160px 1fr auto;">
+        <div class="field-group">
+          <%= label_tag "inventory_from_date", "시작일" %>
+          <%= date_field_tag "inventory[from_date]", @from_date, class: "field-input", id: "inventory_from_date" %>
+        </div>
+        <div class="field-group">
+          <%= label_tag "inventory_to_date", "종료일" %>
+          <%= date_field_tag "inventory[to_date]", @to_date, class: "field-input", id: "inventory_to_date" %>
+        </div>
+        <div class="field-group">
+          <%= label_tag "inventory_available_count", "판매 재고" %>
+          <%= number_field_tag "inventory[available_count]", nil, min: 0, class: "field-input", id: "inventory_available_count", placeholder: @room_type.total_count %>
+        </div>
+        <div class="field-group">
+          <%= label_tag "inventory_is_closed", "판매 상태" %>
+          <%= select_tag "inventory[is_closed]", options_for_select([["판매중", false], ["마감", true]], false), class: "field-input", id: "inventory_is_closed" %>
+        </div>
+        <div class="field-group">
+          <%= label_tag "inventory_price_override", "가격 오버라이드(선택)" %>
+          <%= number_field_tag "inventory[price_override]", nil, min: 0, step: 100, class: "field-input", id: "inventory_price_override", placeholder: "비우면 기본요금" %>
+        </div>
+        <div class="field-group">
+          <%= label_tag "inventory_submit", "저장" %>
+          <%= submit_tag "일괄 저장", class: "search-button", id: "inventory_submit" %>
+        </div>
+      </div>
+      <p style="margin-top:8px; color:#5f6b7a; font-size:13px;">
+        판매 재고를 비우면 기존 값(없으면 기본 재고 <%= @room_type.total_count %>실)을 유지합니다.
+      </p>
+    <% end %>
+  </section>
+
+  <section class="post-list-box">
+    <div class="post-list-header">
+      <h2>호수 번호 관리</h2>
+      <span>쉼표 또는 줄바꿈으로 구분 (예: 301, 302, 303)</span>
+    </div>
+    <%= form_with url: host_room_type_inventory_path(@room_type), method: :patch, local: true do %>
+      <%= hidden_field_tag "inventory[from_date]", @from_date %>
+      <%= hidden_field_tag "inventory[to_date]", @to_date %>
+      <div class="field-group">
+        <%= label_tag "inventory_room_numbers_text", "호수 번호 목록" %>
+        <%= text_area_tag "inventory[room_numbers_text]", @room_type.room_numbers_text, rows: 4, class: "field-input", id: "inventory_room_numbers_text", style: "height:auto; padding:10px;" %>
+      </div>
+      <p style="margin-top:8px; color:#5f6b7a; font-size:13px;">
+        현재 등록 수: <strong><%= @room_type.room_numbers.size %></strong> / 총 객실 수: <strong><%= @room_type.total_count %></strong>
+      </p>
+      <%= submit_tag "호수 번호 저장", class: "search-button", style: "margin-top:10px;" %>
+    <% end %>
+  </section>
+
+  <section class="post-list-box">
+    <div class="post-list-header">
+      <h2>날짜별 재고 현황</h2>
+      <span>잔여 재고 기준으로 예약 가능 여부가 계산됩니다.</span>
+    </div>
+
+    <div style="overflow:auto;">
+      <table style="width:100%; border-collapse:collapse; min-width:780px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:10px; border-bottom:1px solid #e2e8f0;">날짜</th>
+            <th style="text-align:left; padding:10px; border-bottom:1px solid #e2e8f0;">요일</th>
+            <th style="text-align:right; padding:10px; border-bottom:1px solid #e2e8f0;">판매 재고</th>
+            <th style="text-align:right; padding:10px; border-bottom:1px solid #e2e8f0;">예약수</th>
+            <th style="text-align:right; padding:10px; border-bottom:1px solid #e2e8f0;">잔여수</th>
+            <th style="text-align:left; padding:10px; border-bottom:1px solid #e2e8f0;">상태</th>
+            <th style="text-align:right; padding:10px; border-bottom:1px solid #e2e8f0;">가격</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @inventory_rows.each do |row, snapshot| %>
+            <% date = row.date %>
+            <% effective_price = row.price_override.presence || @room_type.base_price %>
+            <tr>
+              <td style="padding:10px; border-bottom:1px solid #edf2f7;"><%= date %></td>
+              <td style="padding:10px; border-bottom:1px solid #edf2f7;"><%= %w[일 월 화 수 목 금 토][date.wday] %></td>
+              <td style="padding:10px; border-bottom:1px solid #edf2f7; text-align:right;"><%= snapshot[:available_count] %></td>
+              <td style="padding:10px; border-bottom:1px solid #edf2f7; text-align:right;"><%= snapshot[:booked_count] %></td>
+              <td style="padding:10px; border-bottom:1px solid #edf2f7; text-align:right; font-weight:700; color:<%= snapshot[:sellable_count].zero? ? "#b91c1c" : "#0f766e" %>;">
+                <%= snapshot[:sellable_count] %>
+              </td>
+              <td style="padding:10px; border-bottom:1px solid #edf2f7;">
+                <% if snapshot[:is_closed] %>
+                  <span class="flash flash--alert" style="display:inline-block; margin:0; padding:4px 8px;">마감</span>
+                <% else %>
+                  <span class="flash flash--notice" style="display:inline-block; margin:0; padding:4px 8px;">판매중</span>
+                <% end %>
+              </td>
+              <td style="padding:10px; border-bottom:1px solid #edf2f7; text-align:right;">
+                <%= number_to_currency(effective_price, unit: "₩", precision: 0) %>
+                <% if row.price_override.present? %><small style="color:#64748b;">(override)</small><% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>

@@ -1,0 +1,89 @@
+<main class="listings-main">
+  <div class="listings-header">
+    <h1><%= @property.property_name %></h1>
+    <div style="display:flex; gap:10px;">
+      <%= link_to "수정", edit_host_property_path(@property) %>
+      <%= button_to "삭제", host_property_path(@property), method: :delete, class: "nav-logout", form: { data: { turbo_confirm: "삭제할까요?" } } %>
+    </div>
+  </div>
+
+  <section class="hotel-search-box">
+    <% if @property.property_image&.display_source.present? %>
+      <%= image_tag @property.property_image.display_source, alt: "#{@property.property_name} 대표 이미지", class: "listing-thumb", style: "max-width:360px; height:220px; margin-bottom:12px;" %>
+    <% end %>
+    <p><strong><%= @property.city %></strong> · <%= @property.address %></p>
+    <p>
+      상태:
+      <span class="property-state-badge <%= @property.is_open? ? 'property-state-badge--open' : 'property-state-badge--closed' %>">
+        <%= @property.is_open? ? "운영중" : "준비중" %>
+      </span>
+    </p>
+    <p><%= @property.description.presence || "설명 없음" %></p>
+    <p>체크인 <%= @property.check_in_time&.strftime('%H:%M') %> / 체크아웃 <%= @property.check_out_time&.strftime('%H:%M') %></p>
+    <p><%= link_to "게스트 화면 보기", property_path(@property) %></p>
+  </section>
+
+  <section class="post-list-box">
+    <div class="post-list-header"><h2>숙소 대표 이미지</h2><span>추천숙소/검색목록 썸네일</span></div>
+    <%= form_with url: host_property_image_path(@property), method: :post, local: true, multipart: true do |f| %>
+      <div class="hotel-search-form" style="grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) auto;">
+        <div class="field-group">
+          <%= f.label :file, "대표 이미지 파일" %>
+          <%= f.file_field :file, name: "image[file]", accept: "image/*", class: "field-input" %>
+        </div>
+        <div class="field-group">
+          <%= f.label :image_url, "대표 이미지 URL (선택)" %>
+          <%= f.url_field :image_url, name: "image[image_url]", class: "field-input", value: @property.property_image&.image_url, placeholder: "https://..." %>
+        </div>
+        <div class="field-group">
+          <%= f.label :submit, "저장" %>
+          <%= f.submit "대표 이미지 저장", class: "search-button" %>
+        </div>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="post-list-box">
+    <div class="post-list-header"><h2>객실 유형</h2><span><%= @property.room_types.count %>개</span></div>
+    <% @property.room_types.order(created_at: :desc).each do |room| %>
+      <article class="post-list-item">
+        <h3><%= room.room_name %></h3>
+        <p>
+          <span><%= room.room_type %></span>
+          <span><%= room.bed_type %></span>
+          <span>최대 <%= room.max_guests %>명</span>
+          <span>재고 <%= room.total_count %>실</span>
+          <span><%= number_to_currency(room.base_price, unit: '₩', precision: 0) %>/박</span>
+          <span><%= link_to "수정", edit_host_room_type_path(room) %></span>
+          <span><%= link_to "재고관리", host_room_type_inventory_path(room) %></span>
+          <span>이미지 <%= room.room_images.count %>장</span>
+        </p>
+      </article>
+    <% end %>
+    <% if @property.room_types.empty? %><p class="post-empty">등록된 객실 유형이 없습니다.</p><% end %>
+  </section>
+
+  <section class="post-list-box">
+    <div class="post-list-header"><h2>객실 유형 추가</h2></div>
+    <% if @room_type&.errors&.any? %>
+      <div class="flash flash--alert" style="margin:0 0 12px 0;"><%= @room_type.errors.full_messages.to_sentence %></div>
+    <% end %>
+    <%= form_with model: [@property, (@room_type || RoomType.new)], url: room_types_host_property_path(@property), method: :post, local: true do |f| %>
+      <div class="hotel-search-form" style="grid-template-columns: repeat(3, minmax(160px, 1fr));">
+        <div class="field-group"><%= f.label :room_name, "객실명" %><%= f.text_field :room_name, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :room_type, "객실 타입" %><%= f.select :room_type, RoomType.room_types.keys, {}, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :bed_type, "침대 타입" %><%= f.select :bed_type, RoomType.bed_types.keys, {}, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :max_guests, "최대 인원" %><%= f.number_field :max_guests, min: 1, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :total_count, "총 객실 수" %><%= f.number_field :total_count, min: 1, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :base_price, "기본 요금" %><%= f.number_field :base_price, min: 0, step: 100, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :currency, "통화" %><%= f.text_field :currency, class: "field-input", value: @room_type&.currency || 'KRW' %></div>
+        <div class="field-group"><%= f.label :area_sqm, "면적(㎡)" %><%= f.number_field :area_sqm, step: 0.1, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :floor, "층수" %><%= f.number_field :floor, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :view_type, "전망" %><%= f.text_field :view_type, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :is_smoking, "흡연 가능" %><%= f.select :is_smoking, [["아니오", false], ["예", true]], {}, class: "field-input" %></div>
+        <div class="field-group"><%= f.label :cancellation_policy_name, "취소 정책" %><%= f.text_field :cancellation_policy_name, class: "field-input", placeholder: "무료취소 1일 전까지" %></div>
+      </div>
+      <%= f.submit "객실 유형 추가", class: "search-button", style: "margin-top:12px;" %>
+    <% end %>
+  </section>
+</main>

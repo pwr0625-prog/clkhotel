@@ -1,0 +1,19 @@
+<main class="listings-main">
+  <div class="listings-header"><h1>결제</h1><%= link_to "예약 상세", booking_path(@booking) %></div>
+
+  <section class="hotel-search-box">
+    <h2 style="margin-top:0;">결제/취소 단계</h2>
+    <p><strong><%= @booking.property.property_name %></strong> · <%= @booking.room_type.room_name %></p>
+    <p><%= @booking.check_in_date %> ~ <%= @booking.check_out_date %> (<%= @booking.nights %>박)</p>
+    <p>결제 예정 금액: <strong><%= number_to_currency(@booking.total_price, unit: '₩', precision: 0) %></strong></p>
+
+    <%= form_with model: [@booking, @payment], url: payment_path(@booking), method: :post, local: true do |f| %>
+      <div class="field-group">
+        <%= f.label :payment_method, "결제 수단" %>
+        <%= f.select :payment_method, Payment.payment_methods.keys.map { |k| [k.upcase, k] }, {}, class: "field-input" %>
+      </div>
+      <p class="home-subtitle">현재는 프로세스 플로우 구현을 위해 모의(Mock) 결제로 즉시 성공 처리됩니다.</p>
+      <%= f.submit "결제 완료", class: "search-button" %>
+    <% end %>
+  </section>
+</main>

@@ -1,0 +1,17 @@
+<main class="listings-main">
+  <div class="listings-header"><h1>숙소 관리</h1><%= link_to "새 숙소 등록", new_host_property_path, class: "new-listing-link" %></div>
+  <section class="post-list-box">
+    <% @properties.each do |property| %>
+      <article class="post-list-item">
+        <h3>
+          <%= link_to property.property_name, host_property_path(property) %>
+          <span class="property-state-badge <%= property.is_open? ? 'property-state-badge--open' : 'property-state-badge--closed' %>">
+            <%= property.is_open? ? "운영중" : "준비중" %>
+          </span>
+        </h3>
+        <p><span><%= property.city %></span><span>객실유형 <%= property.room_types.count %></span><span><%= link_to "수정", edit_host_property_path(property) %></span></p>
+      </article>
+    <% end %>
+    <% if @properties.empty? %><p class="post-empty">숙소가 없습니다.</p><% end %>
+  </section>
+</main>

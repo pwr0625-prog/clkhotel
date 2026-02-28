@@ -1,0 +1,32 @@
+<main class="listings-main">
+  <div class="listings-header"><h1>호스트 예약 관리</h1><%= link_to "대시보드", host_root_path %></div>
+  <section class="post-list-box">
+    <% @bookings.each do |booking| %>
+      <article class="post-list-item">
+        <h3><%= link_to booking.booking_code, booking_path(booking) %> · <%= booking.status_label %></h3>
+        <p>
+          <span><strong><%= booking.property.property_name %></strong></span>
+          <span>게스트 <%= booking.user.name %></span>
+          <span><%= booking.check_in_date %> ~ <%= booking.check_out_date %></span>
+          <span><%= number_to_currency(booking.total_price, unit: '₩', precision: 0) %></span>
+          <span>결제 <%= booking.payment&.payment_status || '미결제' %></span>
+          <% if booking.assigned_room_numbers.any? %>
+            <span>호수 <%= booking.assigned_room_numbers.join(", ") %></span>
+          <% end %>
+        </p>
+        <% if booking.pending? %>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <%= link_to "확정(호수 지정)", host_confirm_booking_form_path(booking), class: "new-listing-link" %>
+            <%= button_to "거절", host_reject_booking_path(booking), method: :patch, class: "nav-logout" %>
+            <%= button_to "삭제", host_delete_booking_path(booking), method: :delete, class: "nav-logout", form: { data: { turbo_confirm: "이 예약을 삭제할까요? (결제/리뷰도 함께 삭제될 수 있습니다)" } } %>
+          </div>
+        <% else %>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <%= button_to "삭제", host_delete_booking_path(booking), method: :delete, class: "nav-logout", form: { data: { turbo_confirm: "이 예약을 삭제할까요? (결제/리뷰도 함께 삭제될 수 있습니다)" } } %>
+          </div>
+        <% end %>
+      </article>
+    <% end %>
+    <% if @bookings.empty? %><p class="post-empty">예약이 없습니다.</p><% end %>
+  </section>
+</main>

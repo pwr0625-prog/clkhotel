@@ -1,0 +1,114 @@
+<h1><%= @listing.title %></h1>
+
+<h2>사진 보기</h2>
+<% if @listing.photos.attached? %>
+  <ul>
+    <% @listing.photos.each do |photo| %>
+      <li>
+        <%= image_tag photo, alt: @listing.title, width: 280 %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p>등록된 사진이 없습니다.</p>
+<% end %>
+
+<h2>hostel 정보</h2>
+<p><strong>설명:</strong> <%= simple_format(@listing.description) %></p>
+<p><strong>위치:</strong> <%= @listing.location %></p>
+<p><strong>가격 정보:</strong> 1박 <%= number_to_currency(@listing.price) %></p>
+<p><strong>최대 수용 인원:</strong> <%= @listing.capacity %>명</p>
+<p><strong>호스트:</strong> <%= @listing.host.name %></p>
+
+<h3>객실타입</h3>
+<%= @listing.room_types.present? ? simple_format(@listing.room_types) : content_tag(:p, "입력된 정보가 없습니다.") %>
+
+<h3>요금</h3>
+<%= @listing.rate_details.present? ? simple_format(@listing.rate_details) : content_tag(:p, "입력된 정보가 없습니다.") %>
+
+<h3>기타</h3>
+<%= @listing.other_details.present? ? simple_format(@listing.other_details) : content_tag(:p, "입력된 정보가 없습니다.") %>
+
+<h2>예약 가능 여부</h2>
+<%= form_with url: listing_path(@listing), method: :get do |form| %>
+  <div>
+    <%= form.label :check_in, "체크인" %><br>
+    <%= form.date_field :check_in, value: params[:check_in] %>
+  </div>
+
+  <div>
+    <%= form.label :check_out, "체크아웃" %><br>
+    <%= form.date_field :check_out, value: params[:check_out] %>
+  </div>
+
+  <div>
+    <%= form.submit "가능 여부 확인" %>
+  </div>
+<% end %>
+
+<% if @availability == true %>
+  <p style="color: green;">선택한 날짜는 예약 가능합니다.</p>
+<% elsif @availability == false %>
+  <p style="color: red;">선택한 날짜는 이미 예약되어 있습니다.</p>
+<% end %>
+
+<% if logged_in? && current_user.guest? %>
+  <h2>예약 요청</h2>
+  <%= form_with model: [@listing, @booking] do |form| %>
+    <% if @booking.errors.any? %>
+      <div>
+        <h3><%= pluralize(@booking.errors.count, "error") %>로 예약에 실패했습니다.</h3>
+        <ul>
+          <% @booking.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div>
+      <%= form.label :check_in, "체크인" %><br>
+      <%= form.date_field :check_in, required: true %>
+    </div>
+
+    <div>
+      <%= form.label :check_out, "체크아웃" %><br>
+      <%= form.date_field :check_out, required: true %>
+    </div>
+
+    <div>
+      <%= form.label :guests_count, "인원" %><br>
+      <%= form.number_field :guests_count, min: 1, max: @listing.capacity, step: 1, required: true %>
+    </div>
+
+    <div>
+      <%= form.submit "예약 요청" %>
+    </div>
+  <% end %>
+<% end %>
+
+<% if logged_in? && current_user.host? && current_user.id == @listing.host_id %>
+  <p><%= link_to "hostel 수정", edit_listing_path(@listing) %></p>
+
+  <h2>예약 요청 목록 (호스트)</h2>
+  <% if @host_pending_bookings.any? %>
+    <ul>
+      <% @host_pending_bookings.each do |booking| %>
+        <li>
+          <p>
+            게스트: <%= booking.guest.name %> |
+            날짜: <%= booking.check_in %> ~ <%= booking.check_out %> |
+            인원: <%= booking.guests_count %>명 |
+            총 금액: <%= number_to_currency(booking.total_price) %>
+          </p>
+          <%= button_to "예약 확정", confirm_booking_path(booking), method: :patch %>
+          <%= button_to "예약 취소", reject_booking_path(booking), method: :patch %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p>대기 중인 예약 요청이 없습니다.</p>
+  <% end %>
+<% end %>
+
+<p><%= link_to "hostel 목록", listings_path %></p>
