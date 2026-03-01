@@ -27,6 +27,16 @@ class BookingsController < ApplicationController
         @booking.save!
         ::RoomInventoryService.reserve!(@booking)
       end
+
+      begin
+        result = BookingRequestedNotifier.call(@booking)
+        unless result.success?
+          Rails.logger.warn("[BookingRequestedNotifier] failed: #{result.message}")
+        end
+      rescue StandardError => e
+        Rails.logger.error("[BookingRequestedNotifier] #{e.class}: #{e.message}")
+      end
+
       redirect_to booking_path(@booking), notice: "예약 요청이 접수되었습니다. 호스트 예약확정 후 결제를 진행할 수 있습니다."
     rescue ActiveRecord::RecordInvalid
       @property = room_type.property

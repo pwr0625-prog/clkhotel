@@ -8,7 +8,10 @@
     <div class="post-list-header"><h2>내 숙소</h2><%= link_to "숙소 등록", new_host_property_path, class: "new-listing-link" %></div>
     <% @properties.each do |property| %>
       <article class="post-list-item">
-        <h3><%= link_to property.property_name, host_property_path(property) %></h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+          <h3 style="margin:0;"><%= link_to property.property_name, host_property_path(property) %></h3>
+          <%= button_to "숙소 삭제", host_property_path(property), method: :delete, class: "nav-logout", form: { data: { turbo_confirm: "#{property.property_name} 숙소를 삭제할까요?" } } %>
+        </div>
         <p><span><%= property.city %></span><span>객실 유형 <%= property.room_types.count %>개</span><span>리뷰 <%= property.review_count %>개</span></p>
       </article>
     <% end %>
