@@ -27,7 +27,7 @@ proxy:
 # Where you keep your container images.
 registry:
   # Alternatives: hub.docker.com / registry.digitalocean.com / ghcr.io / ...
-  server: registry.hub.docker.com
+  server: docker.io
 
   # Needed for authenticated registries.
   username: pwr0625
