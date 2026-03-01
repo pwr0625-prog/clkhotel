@@ -78,13 +78,8 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # Enable DNS rebinding protection and other `Host` header attacks.
-  config.hosts = [
-    "clkhotel.site",
-    "www.clkhotel.site",
-    "clkhotel.onrender.com",
-    /\.onrender\.com\z/
-  ]
+  # Temporary bypass for Render bring-up; tighten to explicit allowlist after stabilization.
+  config.hosts.clear
   #
   # Skip DNS rebinding protection for the default health check endpoint.
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
