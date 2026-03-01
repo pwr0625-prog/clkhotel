@@ -81,7 +81,9 @@ Rails.application.configure do
   # Enable DNS rebinding protection and other `Host` header attacks.
   config.hosts = [
     "clkhotel.site",
-    "www.clkhotel.site"
+    "www.clkhotel.site",
+    "clkhotel.onrender.com",
+    /\.onrender\.com\z/
   ]
   #
   # Skip DNS rebinding protection for the default health check endpoint.
