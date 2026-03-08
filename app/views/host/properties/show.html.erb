@@ -44,7 +44,13 @@
   </section>
 
   <section class="post-list-box">
-    <div class="post-list-header"><h2>객실 유형</h2><span><%= @property.room_types.count %>개</span></div>
+    <div class="post-list-header">
+      <h2>객실 유형</h2>
+      <span style="display:flex; gap:10px; align-items:center;">
+        <span><%= @property.room_types.count %>개</span>
+        <%= link_to "호텔 재고관리", host_property_inventory_path(@property), class: "new-listing-link" %>
+      </span>
+    </div>
     <% @property.room_types.order(created_at: :desc).each do |room| %>
       <article class="post-list-item">
         <h3><%= room.room_name %></h3>
@@ -55,7 +61,6 @@
           <span>재고 <%= room.total_count %>실</span>
           <span><%= number_to_currency(room.base_price, unit: '₩', precision: 0) %>/박</span>
           <span><%= link_to "수정", edit_host_room_type_path(room) %></span>
-          <span><%= link_to "재고관리", host_room_type_inventory_path(room) %></span>
           <span>이미지 <%= room.room_images.count %>장</span>
         </p>
       </article>

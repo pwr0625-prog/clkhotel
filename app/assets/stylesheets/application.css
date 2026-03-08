@@ -611,6 +611,217 @@ textarea.field-input {
   min-height: 130px;
 }
 
+.inventory-calendar__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.inventory-calendar__month-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inventory-calendar__month-form .field-input {
+  min-width: 150px;
+}
+
+.inventory-calendar__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.inventory-calendar__weekdays > div {
+  text-align: center;
+  color: #52607a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.inventory-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.inventory-calendar__day {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 116px;
+  padding: 10px;
+  border: 1px solid #dbe5f3;
+  border-radius: 12px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+}
+
+.inventory-calendar__day:hover {
+  transform: translateY(-1px);
+  border-color: #bfd0e9;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+.inventory-calendar__day--outside {
+  opacity: 0.58;
+}
+
+.inventory-calendar__day--closed {
+  border-color: #fecaca;
+  background: #fff1f2;
+}
+
+.inventory-calendar__day--soldout {
+  border-color: #fed7aa;
+  background: #fff7ed;
+}
+
+.inventory-calendar__day--selected {
+  border-color: #1d63eb;
+  box-shadow: 0 0 0 2px rgba(29, 99, 235, 0.16);
+}
+
+.inventory-calendar__day-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #0f172a;
+}
+
+.inventory-calendar__day-top strong {
+  font-size: 16px;
+}
+
+.inventory-calendar__day-top span {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.inventory-calendar__metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #334155;
+  font-size: 12px;
+}
+
+.inventory-calendar__state {
+  margin-top: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475467;
+}
+
+.inventory-calendar__details {
+  margin-top: 14px;
+}
+
+.inventory-calendar__booking-list {
+  display: grid;
+  gap: 8px;
+}
+
+.inventory-calendar__booking-item {
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.inventory-calendar__booking-item h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.inventory-calendar__booking-item p {
+  margin: 0;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: #475569;
+  font-size: 13px;
+}
+
+.inventory-timeline {
+  overflow-x: auto;
+}
+
+.inventory-timeline__header,
+.inventory-timeline__row {
+  display: grid;
+  grid-template-columns: 220px minmax(800px, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.inventory-timeline__header {
+  margin-bottom: 8px;
+}
+
+.inventory-timeline__row {
+  margin-bottom: 8px;
+}
+
+.inventory-timeline__room-label {
+  padding: 8px 10px;
+  border: 1px solid #dbe5f3;
+  border-radius: 10px;
+  background: #f8fbff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.inventory-timeline__days,
+.inventory-timeline__track {
+  display: grid;
+  grid-template-columns: repeat(var(--days), minmax(28px, 1fr));
+  gap: 3px;
+  align-items: center;
+}
+
+.inventory-timeline__day-cell {
+  text-align: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  padding: 4px 0;
+  color: #64748b;
+  font-size: 11px;
+  background: #fff;
+}
+
+.inventory-timeline__track {
+  min-height: 40px;
+  padding: 4px;
+  border: 1px solid #dbe5f3;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.inventory-timeline__bar {
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  padding: 0 6px;
+  background: linear-gradient(135deg, #1d63eb, #1858d8);
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 @media (max-width: 980px) {
   .hotel-search-form {
     grid-template-columns: repeat(2, minmax(150px, 1fr));
@@ -646,6 +857,16 @@ textarea.field-input {
     height: 220px;
     min-height: 220px;
   }
+
+  .inventory-calendar__grid,
+  .inventory-calendar__weekdays {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .inventory-timeline__header,
+  .inventory-timeline__row {
+    grid-template-columns: 180px minmax(640px, 1fr);
+  }
 }
 
 @media (max-width: 620px) {
@@ -673,5 +894,39 @@ textarea.field-input {
 
   .design-frame {
     min-height: 560px;
+  }
+
+  .inventory-calendar__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inventory-calendar__month-form {
+    width: 100%;
+  }
+
+  .inventory-calendar__month-form .field-input,
+  .inventory-calendar__month-form .search-button {
+    width: 100%;
+  }
+
+  .inventory-calendar__grid,
+  .inventory-calendar__weekdays {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inventory-calendar__day {
+    min-height: 104px;
+  }
+
+  .inventory-timeline__header,
+  .inventory-timeline__row {
+    grid-template-columns: 140px minmax(520px, 1fr);
+    gap: 8px;
+  }
+
+  .inventory-timeline__room-label {
+    font-size: 12px;
+    padding: 7px 8px;
   }
 }

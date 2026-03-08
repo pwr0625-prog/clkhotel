@@ -26,7 +26,7 @@ module Host
         return redirect_to host_bookings_path, alert: "예약확정 대기 상태에서만 확정할 수 있습니다."
       end
       if booking.room_type.room_numbers.blank?
-        return redirect_to host_room_type_inventory_path(booking.room_type), alert: "먼저 객실 재고관리에서 호수 번호를 등록해 주세요."
+        return redirect_to edit_host_room_type_path(booking.room_type), alert: "먼저 객실유형 수정에서 호수 번호를 등록해 주세요."
       end
 
       booking.assign_attributes(

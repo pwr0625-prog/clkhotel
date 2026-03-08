@@ -1,7 +1,16 @@
 <main class="listings-main">
+  <% primary_property = @properties.first %>
   <div class="listings-header">
     <h1>호스트 대시보드</h1>
-    <div style="display:flex; gap:10px;"><%= link_to "숙소 관리", host_properties_path %> <%= link_to "예약 요청", host_bookings_path %></div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <%= link_to "숙소 관리", host_properties_path %>
+      <%= link_to "예약 요청", host_bookings_path %>
+      <% if primary_property.present? %>
+        <%= link_to "호텔 재고관리", host_property_inventory_path(primary_property) %>
+      <% else %>
+        <span style="color:#64748b;">호텔 재고관리 (숙소 등록 후 사용)</span>
+      <% end %>
+    </div>
   </div>
 
   <section class="post-list-box">

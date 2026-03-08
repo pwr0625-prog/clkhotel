@@ -33,6 +33,7 @@ module Host
         :floor,
         :view_type,
         :total_count,
+        :room_numbers_text,
         :is_smoking,
         :cancellation_policy_name
       )

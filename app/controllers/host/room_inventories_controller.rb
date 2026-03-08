@@ -6,6 +6,7 @@ module Host
 
     def show
       load_inventory_rows
+      load_calendar_data
     end
 
     def update
@@ -51,6 +52,7 @@ module Host
                   notice: "재고 설정을 저장했습니다."
     rescue ActiveRecord::RecordInvalid => e
       load_inventory_rows
+      load_calendar_data
       flash.now[:alert] = e.record.errors.full_messages.to_sentence.presence || "재고 저장에 실패했습니다."
       render :show, status: :unprocessable_entity
     end
@@ -82,10 +84,55 @@ module Host
       end
     end
 
+    def load_calendar_data
+      @calendar_month = parse_month(params[:month]) || @from_date.beginning_of_month
+      @calendar_start_date = @calendar_month.beginning_of_month.beginning_of_week(:sunday)
+      @calendar_end_date = @calendar_month.end_of_month.end_of_week(:sunday)
+      @calendar_dates = (@calendar_start_date..@calendar_end_date).to_a
+
+      service = ::RoomInventoryService.new
+      @calendar_snapshots = @calendar_dates.each_with_object({}) do |date, result|
+        result[date] = service.snapshot_for(@room_type, date)
+      end
+
+      @calendar_bookings_by_date = build_calendar_bookings
+      @selected_date = parse_date(params[:selected_date])
+      @selected_date = nil unless @selected_date && @calendar_dates.include?(@selected_date)
+      @selected_date ||= Date.current if @calendar_dates.include?(Date.current)
+      @selected_date ||= @calendar_month.beginning_of_month
+      @selected_date_bookings = @calendar_bookings_by_date[@selected_date] || []
+    end
+
+    def build_calendar_bookings
+      grouped = Hash.new { |hash, key| hash[key] = [] }
+      bookings = @room_type.bookings
+                           .includes(:user)
+                           .where.not(status: :cancelled)
+                           .where("check_in_date <= ? AND check_out_date > ?", @calendar_end_date, @calendar_start_date)
+
+      bookings.each do |booking|
+        visible_start = [booking.check_in_date, @calendar_start_date].max
+        visible_end = [booking.check_out_date - 1.day, @calendar_end_date].min
+        next if visible_end < visible_start
+
+        (visible_start..visible_end).each { |date| grouped[date] << booking }
+      end
+
+      grouped
+    end
+
     def parse_date(value)
       return if value.blank?
 
       Date.parse(value.to_s)
+    rescue ArgumentError
+      nil
+    end
+
+    def parse_month(value)
+      return if value.blank?
+
+      Date.strptime(value.to_s, "%Y-%m").beginning_of_month
     rescue ArgumentError
       nil
     end

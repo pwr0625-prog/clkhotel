@@ -42,6 +42,7 @@ Rails.application.routes.draw do
       end
 
       resource :image, only: %i[create], controller: "property_images"
+      resource :inventory, only: %i[show update], controller: "property_inventories"
     end
 
     resources :room_types, only: %i[edit update] do

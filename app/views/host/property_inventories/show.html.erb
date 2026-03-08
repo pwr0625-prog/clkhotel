@@ -1,0 +1,234 @@
+<main class="listings-main">
+  <div class="listings-header">
+    <h1>호텔 재고 관리</h1>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <%= link_to "숙소 상세", host_property_path(@property) %>
+      <%= link_to "객실 유형 관리", host_property_path(@property) %>
+    </div>
+  </div>
+
+  <section class="hotel-search-box">
+    <p>
+      <strong><%= @property.property_name %></strong> · <%= @property.city %>
+      / 객실유형 <%= @room_types.size %>개 / 총 객실 <%= @room_types.sum(&:total_count) %>실
+    </p>
+
+    <%= form_with url: host_property_inventory_path(@property), method: :get, local: true do |f| %>
+      <div class="hotel-search-form" style="grid-template-columns: 180px 180px auto;">
+        <div class="field-group">
+          <%= f.label :from, "조회 시작일" %>
+          <%= f.date_field :from, value: @from_date, class: "field-input" %>
+        </div>
+        <div class="field-group">
+          <%= f.label :to, "조회 종료일" %>
+          <%= f.date_field :to, value: @to_date, class: "field-input" %>
+        </div>
+        <div class="field-group">
+          <%= f.label :submit, "조회" %>
+          <%= f.submit "기간 조회", class: "search-button" %>
+        </div>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="post-list-box">
+    <div class="post-list-header">
+      <h2>기간 일괄 설정 (호텔 전체)</h2>
+      <span><%= @from_date %> ~ <%= @to_date %></span>
+    </div>
+    <%= form_with url: host_property_inventory_path(@property), method: :patch, local: true do %>
+      <div class="hotel-search-form" style="grid-template-columns: 170px 170px 170px auto;">
+        <div class="field-group">
+          <%= label_tag "inventory_from_date", "시작일" %>
+          <%= date_field_tag "inventory[from_date]", @from_date, class: "field-input", id: "inventory_from_date" %>
+        </div>
+        <div class="field-group">
+          <%= label_tag "inventory_to_date", "종료일" %>
+          <%= date_field_tag "inventory[to_date]", @to_date, class: "field-input", id: "inventory_to_date" %>
+        </div>
+        <div class="field-group">
+          <%= label_tag "inventory_is_closed", "판매 상태" %>
+          <%= select_tag "inventory[is_closed]", options_for_select([["호텔 전체 판매중", false], ["호텔 전체 마감", true]], false), class: "field-input", id: "inventory_is_closed" %>
+        </div>
+        <div class="field-group">
+          <%= label_tag "inventory_submit", "저장" %>
+          <%= submit_tag "일괄 저장", class: "search-button", id: "inventory_submit" %>
+        </div>
+      </div>
+      <p style="margin-top:8px; color:#5f6b7a; font-size:13px;">
+        이 설정은 선택한 기간의 모든 객실유형에 동일하게 적용됩니다.
+      </p>
+    <% end %>
+  </section>
+
+  <section class="post-list-box inventory-calendar">
+    <div class="post-list-header">
+      <h2>호텔 재고/예약 달력</h2>
+      <span><%= @calendar_month.strftime("%Y년 %m월") %></span>
+    </div>
+
+    <div class="inventory-calendar__toolbar">
+      <%= link_to "이전 달",
+                  host_property_inventory_path(
+                    @property,
+                    from: @from_date,
+                    to: @to_date,
+                    month: (@calendar_month << 1).strftime("%Y-%m"),
+                    selected_date: @selected_date
+                  ),
+                  class: "nav-link" %>
+
+      <%= form_with url: host_property_inventory_path(@property), method: :get, local: true, class: "inventory-calendar__month-form" do |f| %>
+        <%= hidden_field_tag :from, @from_date %>
+        <%= hidden_field_tag :to, @to_date %>
+        <%= f.month_field :month, value: @calendar_month.strftime("%Y-%m"), class: "field-input" %>
+        <%= f.submit "이동", class: "search-button" %>
+      <% end %>
+
+      <%= link_to "다음 달",
+                  host_property_inventory_path(
+                    @property,
+                    from: @from_date,
+                    to: @to_date,
+                    month: (@calendar_month >> 1).strftime("%Y-%m"),
+                    selected_date: @selected_date
+                  ),
+                  class: "nav-link" %>
+    </div>
+
+    <div class="inventory-calendar__weekdays">
+      <% %w[일 월 화 수 목 금 토].each do |weekday| %>
+        <div><%= weekday %></div>
+      <% end %>
+    </div>
+
+    <div class="inventory-calendar__grid">
+      <% @calendar_dates.each do |date| %>
+        <% totals = @calendar_totals[date] %>
+        <% bookings = @calendar_bookings_by_date[date] || [] %>
+        <% day_classes = ["inventory-calendar__day"] %>
+        <% day_classes << "inventory-calendar__day--outside" if date.month != @calendar_month.month %>
+        <% day_classes << "inventory-calendar__day--closed" if totals[:all_closed] %>
+        <% day_classes << "inventory-calendar__day--soldout" if totals[:sellable_count].zero? && !totals[:all_closed] %>
+        <% day_classes << "inventory-calendar__day--selected" if date == @selected_date %>
+
+        <%= link_to host_property_inventory_path(@property, from: @from_date, to: @to_date, month: @calendar_month.strftime("%Y-%m"), selected_date: date),
+                    class: day_classes.join(" ") do %>
+          <div class="inventory-calendar__day-top">
+            <strong><%= date.day %></strong>
+            <% if date == Date.current %><span>오늘</span><% end %>
+          </div>
+          <div class="inventory-calendar__metrics">
+            <span>총 잔여 <%= totals[:sellable_count] %>실</span>
+            <span>예약 <%= bookings.size %>건</span>
+          </div>
+          <div class="inventory-calendar__state">
+            <% if totals[:all_closed] %>
+              호텔 마감
+            <% elsif totals[:sellable_count].zero? %>
+              매진
+            <% else %>
+              판매중
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="post-list-box">
+    <div class="post-list-header">
+      <h2>객실유형/호수 예약 타임라인</h2>
+      <span><%= @timeline_start_date %> ~ <%= @timeline_end_date %></span>
+    </div>
+
+    <div class="inventory-timeline">
+      <div class="inventory-timeline__header">
+        <div class="inventory-timeline__room-label">객실유형 / 호수</div>
+        <div class="inventory-timeline__days" style="--days:<%= @timeline_dates.size %>;">
+          <% @timeline_dates.each do |date| %>
+            <div class="inventory-timeline__day-cell"><%= date.day %></div>
+          <% end %>
+        </div>
+      </div>
+
+      <% @timeline_rows.each do |row| %>
+        <div class="inventory-timeline__row">
+          <div class="inventory-timeline__room-label"><%= row[:label] %></div>
+          <div class="inventory-timeline__track" style="--days:<%= @timeline_dates.size %>;">
+            <% row[:bars].each do |bar| %>
+              <div class="inventory-timeline__bar"
+                   title="<%= "#{bar[:booking_code]} #{bar[:guest_name]}" %>"
+                   style="grid-column: <%= bar[:start_index] %> / span <%= bar[:span] %>;">
+                <span><%= bar[:guest_name] %></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <% if @timeline_rows.empty? %>
+        <p class="post-empty">객실유형 또는 호수 정보가 없습니다.</p>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="post-list-box">
+    <div class="post-list-header">
+      <h2><%= @selected_date %> 객실유형별 재고</h2>
+      <span><%= @selected_date_rows.size %>개 객실유형</span>
+    </div>
+    <div style="overflow:auto;">
+      <table style="width:100%; border-collapse:collapse; min-width:760px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:10px; border-bottom:1px solid #e2e8f0;">객실유형</th>
+            <th style="text-align:right; padding:10px; border-bottom:1px solid #e2e8f0;">판매 재고</th>
+            <th style="text-align:right; padding:10px; border-bottom:1px solid #e2e8f0;">예약수</th>
+            <th style="text-align:right; padding:10px; border-bottom:1px solid #e2e8f0;">잔여수</th>
+            <th style="text-align:left; padding:10px; border-bottom:1px solid #e2e8f0;">상태</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @selected_date_rows.each do |room_type, snapshot| %>
+            <tr>
+              <td style="padding:10px; border-bottom:1px solid #edf2f7;"><%= room_type.room_name %></td>
+              <td style="padding:10px; border-bottom:1px solid #edf2f7; text-align:right;"><%= snapshot[:available_count] %></td>
+              <td style="padding:10px; border-bottom:1px solid #edf2f7; text-align:right;"><%= snapshot[:booked_count] %></td>
+              <td style="padding:10px; border-bottom:1px solid #edf2f7; text-align:right; font-weight:700;"><%= snapshot[:sellable_count] %></td>
+              <td style="padding:10px; border-bottom:1px solid #edf2f7;"><%= snapshot[:is_closed] ? "마감" : "판매중" %></td>
+            </tr>
+          <% end %>
+          <% if @selected_date_rows.empty? %>
+            <tr><td colspan="5" style="padding:12px;">등록된 객실유형이 없습니다.</td></tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="post-list-box">
+    <div class="post-list-header">
+      <h2><%= @selected_date %> 예약 상세</h2>
+      <span>총 <%= @selected_date_bookings.size %>건</span>
+    </div>
+    <% if @selected_date_bookings.empty? %>
+      <p class="post-empty">선택한 날짜의 예약이 없습니다.</p>
+    <% else %>
+      <div class="inventory-calendar__booking-list">
+        <% @selected_date_bookings.each do |booking| %>
+          <article class="inventory-calendar__booking-item">
+            <h3><%= link_to booking.booking_code, booking_path(booking) %> · <%= booking.status_label %></h3>
+            <p>
+              <span><strong><%= booking.room_type.room_name %></strong></span>
+              <span>게스트 <%= booking.user.name %></span>
+              <span><%= booking.check_in_date %> ~ <%= booking.check_out_date %></span>
+              <span>객실 <%= booking.room_count %>실</span>
+              <span>인원 <%= booking.guest_count %>명</span>
+            </p>
+          </article>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+</main>
